@@ -71,10 +71,23 @@ def test_parse_part_subparts_subject_groups_and_appendices():
     assert [(r.identifier, r.kind, r.subpart) for r in rows] == [
         ("25.1", "section", "A"),
         ("25.21", "section", "B"),
+        ("25.25", "section", "B"),
         ("Appendix A to Part 25", "appendix", None),
     ]
     assert rows[1].subpart_heading == "Subpart B - Flight"
-    assert rows[2].heading == "Appendix A to Part 25"
+    assert rows[3].heading == "Appendix A to Part 25"
+
+
+def test_parse_part_renders_tables_row_by_row():
+    rows = parse("ecfr-part-25.xml", ecfr.PartRef("25", "I", "C"))
+    table = next(r for r in rows if r.identifier == "25.25")
+    assert table.text == (
+        "(a) Maximum weights are listed in table 1.\n\n"
+        "Table 1 to § 25.25\n"
+        "Condition | Maximum weight\n"
+        "Takeoff | 100,000 lb\n"
+        "Landing | 90,000 lb"
+    )
 
 
 def test_parse_part_finds_part_below_root():

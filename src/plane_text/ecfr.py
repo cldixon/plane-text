@@ -83,17 +83,29 @@ SCHEMA = {
 
 
 def client() -> httpx.Client:
-    return httpx.Client(
-        headers={"User-Agent": USER_AGENT},
-        timeout=120,
-        transport=httpx.HTTPTransport(retries=3),
-        follow_redirects=True,
-    )
+    # No custom transport: it would stop httpx from honoring proxy settings in the environment.
+    return httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=120, follow_redirects=True)
+
+
+def get(http: httpx.Client, url: str, attempts: int = 4) -> httpx.Response:
+    """GET with retries on transport errors and 429/5xx, backing off 2s, 4s, 8s."""
+    for attempt in range(attempts):
+        try:
+            response = http.get(url)
+            if response.status_code != 429 and response.status_code < 500:
+                response.raise_for_status()
+                return response
+        except httpx.TransportError:
+            if attempt == attempts - 1:
+                raise
+        if attempt < attempts - 1:
+            time.sleep(2 ** (attempt + 1))
+    response.raise_for_status()
+    return response
 
 
 def latest_issue_date(http: httpx.Client) -> str:
-    response = http.get(f"{API}/titles.json")
-    response.raise_for_status()
+    response = get(http, f"{API}/titles.json")
     for entry in response.json()["titles"]:
         if entry["number"] == TITLE:
             return entry["latest_issue_date"]
@@ -101,8 +113,7 @@ def latest_issue_date(http: httpx.Client) -> str:
 
 
 def fetch_structure(http: httpx.Client, date: str) -> dict[str, Any]:
-    response = http.get(f"{API}/structure/{date}/title-{TITLE}.json")
-    response.raise_for_status()
+    response = get(http, f"{API}/structure/{date}/title-{TITLE}.json")
     return response.json()
 
 
@@ -114,8 +125,7 @@ def fetch_part(http: httpx.Client, date: str, part: str, cache: Path) -> bytes:
     path = cache / f"part-{part}.xml"
     if path.exists():
         return path.read_bytes()
-    response = http.get(part_url(date, part))
-    response.raise_for_status()
+    response = get(http, part_url(date, part))
     cache.mkdir(parents=True, exist_ok=True)
     path.write_bytes(response.content)
     return response.content
@@ -158,8 +168,26 @@ def heading_of(element: ET.Element) -> str:
     return text_of(head) if head is not None else ""
 
 
+def table_of(table: ET.Element) -> str:
+    """A table as its caption, then one line per row with cells separated by ` | `."""
+    lines = [text_of(caption) for caption in table.findall("CAPTION")]
+    for row in table.iter("TR"):
+        cells = [text_of(cell) for cell in row if cell.tag in ("TD", "TH")]
+        if any(cells):
+            lines.append(" | ".join(cells))
+    return "\n".join(line for line in lines if line)
+
+
+def block_of(element: ET.Element) -> str:
+    if element.tag == "TABLE":
+        return table_of(element)
+    if element.find(".//TABLE") is not None:  # tables arrive wrapped in DIVs
+        return "\n\n".join(b for b in (block_of(child) for child in element) if b)
+    return text_of(element)
+
+
 def body_of(element: ET.Element) -> str:
-    blocks = (text_of(child) for child in element if child.tag not in NON_BODY)
+    blocks = (block_of(child) for child in element if child.tag not in NON_BODY)
     return "\n\n".join(block for block in blocks if block)
 
 
