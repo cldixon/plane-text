@@ -39,10 +39,13 @@ The landing page lives in `site/`: Astro with Svelte and TypeScript, served as s
 
 ```sh
 cd site
-bun install
-bun run dev       # local dev server
+bun install && bun install --cwd cloudflare
+bun run dev       # Astro dev server
 bun run build     # type-check, then build to site/dist
-bun run deploy    # build and deploy with wrangler
+bun run preview   # build, then serve the built site locally with cf dev
+bun run deploy    # build, then deploy with cf
 ```
+
+Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta), configured in `site/cloudflare/cloudflare.config.ts`. It is a separate project inside `site/` because `cf` does not yet build Astro projects directly: Astro builds `site/dist`, and `cf` packages that directory as static assets. `cf` itself runs on Node 22.18 or later, since it cannot load `cloudflare.config.ts` on Bun yet. Deploying needs `CLOUDFLARE_API_TOKEN`.
 
 Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.

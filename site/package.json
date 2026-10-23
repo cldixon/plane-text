@@ -6,8 +6,8 @@
     "dev": "bunx --bun astro dev",
     "check": "bunx --bun astro check",
     "build": "bunx --bun astro check && bunx --bun astro build",
-    "preview": "bunx wrangler dev",
-    "deploy": "bun run build && bunx wrangler deploy"
+    "preview": "bun run build && bun run --cwd cloudflare dev",
+    "deploy": "bun run build && bun run --cwd cloudflare deploy"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.1.1",
@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "typescript": "^6.0.3",
-    "wrangler": "^4.152.0"
+    "typescript": "^6.0.3"
   }
 }
