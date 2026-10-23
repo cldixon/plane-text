@@ -7,7 +7,7 @@ An open-source corpus of aviation maintenance text: regulations, airworthiness d
 | Dataset | Source | Grain | Status |
 | --- | --- | --- | --- |
 | `ecfr-title14` | 14 CFR (Aeronautics and Space), eCFR versioner API | one row per section or appendix | in R2 |
-| `faa-ads` | FAA AD final rules (`ADFRAWD`), DRS API via [`faa-drs`](https://pypi.org/project/faa-drs/) | one row per DRS document (corrections are separate rows) | pipeline written |
+| `faa-ads` | FAA AD final rules (`ADFRAWD`), DRS API via [`faa-drs`](https://pypi.org/project/faa-drs/) | one row per DRS document (corrections are separate rows) | in R2 |
 
 ## Development
 
