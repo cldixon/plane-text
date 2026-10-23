@@ -10,6 +10,7 @@ An open-source corpus of aviation maintenance text: regulations, airworthiness d
 | `faa-ads` | FAA AD final rules (`ADFRAWD`), DRS API via [`faa-drs`](https://pypi.org/project/faa-drs/) | one row per DRS document (corrections are separate rows) | in R2 |
 | `faa-sdrs` | FAA Service Difficulty Reports, yearly CSV downloads, 1995 onward | one row per report | in R2 |
 | `faa-sdrs-lookups` | FAA SDRS Look-Up Tables and the 2008 JASC code table | one small table per SDR code set | in R2 |
+| `ntsb-narratives` | NTSB aviation accident database (`avall.zip`, `Pre2008.zip`), 1982 onward | one row per aircraft per event | in R2 |
 
 ## Development
 
@@ -31,11 +32,12 @@ uv run python -m plane_text.ecfr --upload       # also upload to R2
 uv run python -m plane_text.faa_ads             # all AD final rules -> data/faa-ads/v<today>/ad-final-rules.parquet
 uv run python -m plane_text.faa_sdrs            # all SDR years -> data/faa-sdrs/v<today>/service-difficulty-reports.parquet
 uv run python -m plane_text.faa_sdrs_lookups    # SDR code tables -> data/faa-sdrs-lookups/v<today>/<table>.parquet
+uv run python -m plane_text.ntsb                # NTSB narratives -> data/ntsb-narratives/v<today>/narratives.parquet
 ```
 
 Raw source files are cached under `data/raw/`, so re-runs only re-parse. Each parquet file carries its provenance (source, source URL, issue date, retrieval time) as `plane_text.*` key-value metadata.
 
-Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`. The FAA ADs pipeline also needs `DRS_API_KEY`.
+Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`. The FAA ADs pipeline also needs `DRS_API_KEY`. The NTSB pipeline needs `mdb-export` from [mdbtools](https://github.com/mdbtools/mdbtools) (`apt-get install mdbtools`) to read the NTSB's Access files.
 
 ## Site
 
