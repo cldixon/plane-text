@@ -8,6 +8,7 @@ An open-source corpus of aviation maintenance text: regulations, airworthiness d
 | --- | --- | --- | --- |
 | `ecfr-title14` | 14 CFR (Aeronautics and Space), eCFR versioner API | one row per section or appendix | in R2 |
 | `faa-ads` | FAA AD final rules (`ADFRAWD`), DRS API via [`faa-drs`](https://pypi.org/project/faa-drs/) | one row per DRS document (corrections are separate rows) | in R2 |
+| `faa-sdrs` | FAA Service Difficulty Reports, yearly CSV downloads, 1995 onward | one row per report | in R2 |
 
 ## Development
 
@@ -27,6 +28,7 @@ uv run python -m plane_text.ecfr                # latest issue -> data/ecfr-titl
 uv run python -m plane_text.ecfr --limit 5      # first five parts only
 uv run python -m plane_text.ecfr --upload       # also upload to R2
 uv run python -m plane_text.faa_ads             # all AD final rules -> data/faa-ads/v<today>/ad-final-rules.parquet
+uv run python -m plane_text.faa_sdrs            # all SDR years -> data/faa-sdrs/v<today>/service-difficulty-reports.parquet
 ```
 
 Raw source files are cached under `data/raw/`, so re-runs only re-parse. Each parquet file carries its provenance (source, source URL, issue date, retrieval time) as `plane_text.*` key-value metadata.
