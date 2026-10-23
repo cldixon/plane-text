@@ -96,11 +96,13 @@ def export_table(mdb: Path, table: str) -> pl.DataFrame:
     return pl.read_csv(io.BytesIO(csv), infer_schema=False)
 
 
-def read_database(archive: bytes, name: str) -> dict[str, pl.DataFrame]:
+def read_database(
+    archive: bytes, name: str, tables: tuple[str, ...] = ("narratives", "events", "aircraft")
+) -> dict[str, pl.DataFrame]:
     with tempfile.TemporaryDirectory() as tmp:
         zipfile.ZipFile(io.BytesIO(archive)).extract(f"{name}.mdb", tmp)
         mdb = Path(tmp) / f"{name}.mdb"
-        return {table: export_table(mdb, table) for table in ("narratives", "events", "aircraft")}
+        return {table: export_table(mdb, table) for table in tables}
 
 
 # --- parsing ----------------------------------------------------------------

@@ -11,6 +11,7 @@ An open-source corpus of aviation maintenance text: regulations, airworthiness d
 | `faa-sdrs` | FAA Service Difficulty Reports, yearly CSV downloads, 1995 onward | one row per report | in R2 |
 | `faa-sdrs-lookups` | FAA SDRS Look-Up Tables and the 2008 JASC code table | one small table per SDR code set | in R2 |
 | `ntsb-narratives` | NTSB aviation accident database (`avall.zip`, `Pre2008.zip`), 1982 onward | one row per aircraft per event | in R2 |
+| `ntsb-lookups` | NTSB database's embedded data dictionary and code tables | column definitions and code meanings, four tables | in R2 |
 
 ## Development
 
@@ -33,6 +34,7 @@ uv run python -m plane_text.faa_ads             # all AD final rules -> data/faa
 uv run python -m plane_text.faa_sdrs            # all SDR years -> data/faa-sdrs/v<today>/service-difficulty-reports.parquet
 uv run python -m plane_text.faa_sdrs_lookups    # SDR code tables -> data/faa-sdrs-lookups/v<today>/<table>.parquet
 uv run python -m plane_text.ntsb                # NTSB narratives -> data/ntsb-narratives/v<today>/narratives.parquet
+uv run python -m plane_text.ntsb_lookups        # NTSB code tables -> data/ntsb-lookups/v<today>/<table>.parquet
 ```
 
 Raw source files are cached under `data/raw/`, so re-runs only re-parse. Each parquet file carries its provenance (source, source URL, issue date, retrieval time) as `plane_text.*` key-value metadata.
