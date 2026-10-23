@@ -32,3 +32,17 @@ uv run python -m plane_text.faa_ads             # all AD final rules -> data/faa
 Raw source files are cached under `data/raw/`, so re-runs only re-parse. Each parquet file carries its provenance (source, source URL, issue date, retrieval time) as `plane_text.*` key-value metadata.
 
 Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`. The FAA ADs pipeline also needs `DRS_API_KEY`.
+
+## Site
+
+The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `planetext.cldixon.dev`. Requires Node 24 (`site/.nvmrc`).
+
+```sh
+cd site
+npm install
+npm run dev       # local dev server
+npm run build     # type-check, then build to site/dist
+npm run deploy    # build and deploy with wrangler
+```
+
+Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.

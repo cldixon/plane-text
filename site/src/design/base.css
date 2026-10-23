@@ -1,0 +1,38 @@
+/*
+ * Element defaults, built only from tokens. Links are left to the browser.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--line-height-tight);
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+}
+
+code,
+pre {
+  font-family: var(--font-family-mono);
+}

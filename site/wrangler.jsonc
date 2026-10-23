@@ -1,0 +1,11 @@
+// Static site served from Workers static assets. No Worker script yet.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "plane-text",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+  "routes": [{ "pattern": "planetext.cldixon.dev", "custom_domain": true }]
+}
