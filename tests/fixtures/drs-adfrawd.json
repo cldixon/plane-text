@@ -1,0 +1,214 @@
+[
+ {
+  "doctype": "ADFRAWD",
+  "guid": "FR-ADFRAWD-2026-21664-0000000000",
+  "url": "https://drs.faa.gov/browse/excelExternalWindow/FR-ADFRAWD-2026-21664-0000000000.0001",
+  "last_modified": "2026-10-23T15:55:05.427000Z",
+  "download_url": "https://drs.faa.gov/api/drs/data-pull/download/60d5f1a8-39f0-43b1-ad4f-c4c09e95e5e7",
+  "file_name": "2026-21-05.html",
+  "has_attachments": false,
+  "attachments_url": null,
+  "metadata": {
+   "drs:documentNumber": "2026-21-05",
+   "drs:status": "Current",
+   "drs:adfrawdDocketNo": "FAA-2026-4666",
+   "drs:adfrawdAmendment": "39-23494",
+   "drs:adfrawdMake": [
+    "MD Helicopters LLC"
+   ],
+   "drs:adfrawdModel": [
+    "369D",
+    "369E",
+    "369F",
+    "369FF",
+    "369H",
+    "500N"
+   ],
+   "drs:adfrawdProductType": [
+    "Aircraft"
+   ],
+   "drs:adfrawdProductSubType": [
+    "Rotorcraft"
+   ],
+   "drs:adfrawdSubject": "Engine/transmission coupling",
+   "drs:adfrawdAffectedAD": null,
+   "drs:adfrawdSupersededAD": null,
+   "drs:adfrawdAffectedBy": null,
+   "drs:adfrawdSupersededBy": null,
+   "drs:adfrawdCitation": "Federal Register, Volume 91 Number 204 (Friday, October 23, 2026)",
+   "drs:adfrawdPageNumber": "(Pages 66783-66785)",
+   "drs:title": "Airworthiness Directives; MD Helicopters, LLC Helicopters",
+   "drs:adfrawdAction": "Final rule.",
+   "drs:adfrawdSummary": "The FAA is adopting a new airworthiness directive (AD) for certain MD Helicopters, LLC (MDHI) Model 369D, 369E, 369F, 369FF, 369H, and 500N helicopters. This AD was prompted by a report of mechanical damage to the main transmission drive shaft coupling (coupling). This AD requires a one-time visual inspection of the couplings for cracks of the splines and, depending on the results, replacement of the couplings. The FAA is issuing this AD to address the unsafe condition on these products.",
+   "drs:adfrawdAddresses": null,
+   "drs:adfrawdFurtherInfoContact": null,
+   "drs:adfrawdSupplementaryInfo": "Background The FAA issued a notice of proposed rulemaking (NPRM) to amend 14 CFR part 39 by adding an AD that would apply to certain MDHI Model 369D, 369E, 369F, 369FF, 369H, and 500N helicopters. The NPRM was published in the Federal Register on July 1, 2026 (91 FR 39903). The NPRM was prompted by a report that couplings having part number (P/N) 369H5660 were found with mechanical damage to the root fillets, spline faces, and the major diameter. It was also reported that a new vendor improperly manufactured certain couplings having P/N 369H5660, with a total of 148 shipped to customers betwee",
+   "drs:adfrawdRegulatoryText": "1. The authority citation for part 39 continues to read as follows: Authority: 49 U.S.C. 106(g), 40113, 44701. 2. The FAA amends \u00a7 39.13 by adding the following new airworthiness directive: 2026-21-05 MD Helicopters, LLC: Amendment 39-23494; Docket No. FAA-2026-4666; Project Identifier AD-2025-01677-R. (a) Effective Date This airworthiness directive (AD) is effective November 27, 2026. (b) Affected ADs None. (c) Applicability This AD applies to MD Helicopters, LLC (MDHI) Model 369D, 369E, 369F, 369FF, 369H, and 500N helicopters, certificated in any category, with an installed main transmission",
+   "drs:adfrawdFooter": null,
+   "drs:partNumber": [
+    "Part 39"
+   ],
+   "drs:subPart": [
+    null
+   ],
+   "drs:sectionNumber": [
+    null
+   ],
+   "drs:adfrawdCitationPublishDate": "2026-10-23",
+   "drs:adfrawdIssueDate": "2026-10-20",
+   "drs:comments": null,
+   "drs:effectiveDate": "2026-11-27",
+   "drs:documentOwner": [
+    "AIR-700: Compliance & Airworthiness Division"
+   ],
+   "drs:primaryRespOffice": [
+    "AIR-730: International Validation Branch"
+   ],
+   "drs:ACReference": null,
+   "drs:airPolicyReference": null,
+   "drs:additionalReference": null
+  }
+ },
+ {
+  "doctype": "ADFRAWD",
+  "guid": "88060DED3BDE4DB38625698B00764100",
+  "url": "https://drs.faa.gov/browse/excelExternalWindow/88060DED3BDE4DB38625698B00764100.0001",
+  "last_modified": "2026-04-03T23:00:04.957000Z",
+  "download_url": "https://drs.faa.gov/api/drs/data-pull/download/cc9f2455-0a16-401a-b3bd-1d81fcd876e9",
+  "file_name": "DRS_50-05-01.html",
+  "has_attachments": false,
+  "attachments_url": null,
+  "metadata": {
+   "drs:documentNumber": "50-05-01",
+   "drs:status": "Current",
+   "drs:adfrawdDocketNo": "Unknown",
+   "drs:adfrawdAmendment": null,
+   "drs:adfrawdMake": [
+    "Piper Aircraft Inc."
+   ],
+   "drs:adfrawdModel": [
+    "PA-12",
+    "PA-12S",
+    "J3C-40",
+    "J3C-50",
+    "J3C-50S",
+    "J3C-65S",
+    "PA-11",
+    "PA-11S",
+    "J3C-65 (Army L-4; L-4A; L-4B (Navy NE-1); L-4H; L-4J (Navy NE-2))"
+   ],
+   "drs:adfrawdProductType": [
+    "Aircraft"
+   ],
+   "drs:adfrawdProductSubType": [
+    "Small Airplane"
+   ],
+   "drs:adfrawdSubject": "Nicopress Sleeve Rework",
+   "drs:adfrawdAffectedAD": null,
+   "drs:adfrawdSupersededAD": null,
+   "drs:adfrawdAffectedBy": null,
+   "drs:adfrawdSupersededBy": null,
+   "drs:adfrawdCitation": "This information is not available.",
+   "drs:adfrawdPageNumber": null,
+   "drs:title": "Airworthiness Directives; Piper Models All J3C, PA-11, and PA-12 Aircraft",
+   "drs:adfrawdAction": null,
+   "drs:adfrawdSummary": null,
+   "drs:adfrawdAddresses": null,
+   "drs:adfrawdFurtherInfoContact": null,
+   "drs:adfrawdSupplementaryInfo": null,
+   "drs:adfrawdRegulatoryText": "50-05-01   PIPER:  Applies to All J3C, PA-11, PA-12 Aircraft Manufactured Between November 1945 and November 1946 Inclusive. \n\n\tCompliance required at next periodic inspection but not later than March 1, 1950. \n\n\tIn order to minimize the possibility of understrength Nicopress sleeves in the control system, check the major dimension of the pressed portions of all sleeves.  If this dimension exceeds 0.353 inch, the sleeve should be repressed to this dimension by two presses with National Telephone Supply Co.'s hand tool 51-M-850.  The go-gage furnished with the tool may be used to check the 0.35",
+   "drs:adfrawdFooter": null,
+   "drs:partNumber": [
+    "Part 39"
+   ],
+   "drs:subPart": [
+    null
+   ],
+   "drs:sectionNumber": [
+    null
+   ],
+   "drs:adfrawdCitationPublishDate": "1950-06-17",
+   "drs:adfrawdIssueDate": "1950-06-17",
+   "drs:comments": null,
+   "drs:effectiveDate": null,
+   "drs:documentOwner": [
+    "AIR-700: Compliance & Airworthiness Division"
+   ],
+   "drs:primaryRespOffice": [
+    "AIR-720: Operational Safety Branch"
+   ],
+   "drs:ACReference": null,
+   "drs:airPolicyReference": null,
+   "drs:additionalReference": null
+  }
+ },
+ {
+  "doctype": "ADFRAWD",
+  "guid": "FR-ADFRAWD-2026-21686-0000000000",
+  "url": "https://drs.faa.gov/browse/excelExternalWindow/FR-ADFRAWD-2026-21686-0000000000.0001",
+  "last_modified": "2026-10-23T15:46:45.636000Z",
+  "download_url": "https://drs.faa.gov/api/drs/data-pull/download/b2cca0ad-b93c-4cb2-bcbc-1ce8e75ed87d",
+  "file_name": "2026-20-10.html",
+  "has_attachments": false,
+  "attachments_url": null,
+  "metadata": {
+   "drs:documentNumber": "2026-20-10",
+   "drs:status": "Current",
+   "drs:adfrawdDocketNo": "FAA-2026-2712",
+   "drs:adfrawdAmendment": "39-23483",
+   "drs:adfrawdMake": [
+    "The Boeing Company"
+   ],
+   "drs:adfrawdModel": [
+    "787-8",
+    "787-9",
+    "787-10"
+   ],
+   "drs:adfrawdProductType": [
+    "Aircraft"
+   ],
+   "drs:adfrawdProductSubType": [
+    "Large Airplane"
+   ],
+   "drs:adfrawdSubject": "Flight Controls",
+   "drs:adfrawdAffectedAD": null,
+   "drs:adfrawdSupersededAD": [
+    "2019-20-07"
+   ],
+   "drs:adfrawdAffectedBy": null,
+   "drs:adfrawdSupersededBy": null,
+   "drs:adfrawdCitation": "Federal Register, Volume 91 Number 204 (Friday, October 23, 2026)",
+   "drs:adfrawdPageNumber": "(Pages 66785-66791)",
+   "drs:title": "Airworthiness Directives; The Boeing Company Airplanes; Correction",
+   "drs:adfrawdAction": "Final rule; correction.",
+   "drs:adfrawdSummary": "The FAA is correcting an airworthiness directive (AD) that was published in the Federal Register. That AD applies to certain The Boeing Company Model 787-8, 787-9, and 787-10 airplanes. As published, a paragraph reference specified in the regulatory text is incorrect. This document corrects that error. In all other respects, the original document remains the same.",
+   "drs:adfrawdAddresses": null,
+   "drs:adfrawdFurtherInfoContact": null,
+   "drs:adfrawdSupplementaryInfo": "Background AD 2026-20-10, Amendment 39-23483 (91 FR 64259, October 8, 2026) (AD 2026-20-10), requires repetitive operational checks of the leading edge (LE) outboard (OB) slats and applicable on-condition actions, revising the airplane flight manual (AFM) to prohibit flap retraction under icing conditions after landing, and revising the existing maintenance or inspection program, as applicable, to incorporate a new operation check. AD 2026-20-10 also requires replacing the LE outboard geared rotary actuator (GRA) with a LE outboard lockout actuator (LEOLA) at leading edge OB slat locations and",
+   "drs:adfrawdRegulatoryText": "1. The authority citation for part 39 continues to read as follows: Authority: 49 U.S.C. 106(g), 40113, 44701. 2. The FAA amends \u00a7 39.13 by: a. Removing Airworthiness Directive (AD) 2019-20-07, Amendment 39-19760 (84 FR 54765, October 11, 2019); and b. Adding the following new AD: 2026-20-10 The Boeing Company: Amendment 39-23483; Docket No. FAA-2026-2712; Project Identifier AD-2025-00931-T. (a) Effective Date This airworthiness directive (AD) is effective November 12, 2026. (b) Affected ADs This AD replaces AD 2019-20-07, Amendment 39-19760 (84 FR 54765, October 11, 2019) (AD 2019-20-07). (c)",
+   "drs:adfrawdFooter": null,
+   "drs:partNumber": [
+    "Part 39"
+   ],
+   "drs:subPart": [
+    null
+   ],
+   "drs:sectionNumber": [
+    null
+   ],
+   "drs:adfrawdCitationPublishDate": "2026-10-23",
+   "drs:adfrawdIssueDate": "2026-10-20",
+   "drs:comments": null,
+   "drs:effectiveDate": "2026-11-12",
+   "drs:documentOwner": [
+    "AIR-500 Integrated Certificate Management Division"
+   ],
+   "drs:primaryRespOffice": [
+    "AIR-520: Continued Operational Safety Branch"
+   ],
+   "drs:ACReference": null,
+   "drs:airPolicyReference": null,
+   "drs:additionalReference": null
+  }
+ }
+]

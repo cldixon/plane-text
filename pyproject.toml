@@ -1,0 +1,35 @@
+[project]
+name = "plane-text"
+version = "0.1.0"
+description = "An open-source corpus of aviation maintenance text."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.43.118",
+    "faa-drs>=0.1.1",
+    "fastexcel>=0.21.0",
+    "httpx>=0.28.1",
+    "polars>=2.0.0",
+    "pypdf>=6.21.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "boto3-stubs[s3]>=1.43.118",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+    "ty>=0.0.91",
+]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

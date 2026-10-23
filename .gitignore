@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+data/
+node_modules/
+site/dist/
+site/.astro/
+.wrangler/
+site/cloudflare/.cloudflare/
