@@ -2,15 +2,12 @@
   "name": "plane-text-site",
   "type": "module",
   "private": true,
-  "engines": {
-    "node": ">=24"
-  },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro check && astro build",
-    "preview": "wrangler dev",
-    "check": "astro check",
-    "deploy": "npm run build && wrangler deploy"
+    "dev": "bunx --bun astro dev",
+    "check": "bunx --bun astro check",
+    "build": "bunx --bun astro check && bunx --bun astro build",
+    "preview": "bunx wrangler dev",
+    "deploy": "bun run build && bunx wrangler deploy"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.1.1",

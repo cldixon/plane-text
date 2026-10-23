@@ -35,14 +35,14 @@ Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPO
 
 ## Site
 
-The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `planetext.cldixon.dev`. Requires Node 24 (`site/.nvmrc`).
+The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `planetext.cldixon.dev`. Requires [Bun](https://bun.sh); Astro runs on the Bun runtime.
 
 ```sh
 cd site
-npm install
-npm run dev       # local dev server
-npm run build     # type-check, then build to site/dist
-npm run deploy    # build and deploy with wrangler
+bun install
+bun run dev       # local dev server
+bun run build     # type-check, then build to site/dist
+bun run deploy    # build and deploy with wrangler
 ```
 
 Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.
