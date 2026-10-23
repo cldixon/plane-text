@@ -8,5 +8,5 @@ data/
 node_modules/
 site/dist/
 site/.astro/
-site/.wrangler/
+.wrangler/
 site/cloudflare/.cloudflare/
