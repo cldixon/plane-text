@@ -1,0 +1,282 @@
+{
+ "SAIB": [
+  {
+   "doctype": "SAIB",
+   "guid": "DRSDOCID187987885220260909163232",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/DRSDOCID187987885220260909163232.0001",
+   "last_modified": "2026-09-09T16:48:34.258000Z",
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/d47c9d32-f56c-4a03-adae-de648701c4a8",
+   "file_name": "2026-15.pdf",
+   "has_attachments": false,
+   "attachments_url": null,
+   "metadata": {
+    "drs:documentNumber": "2026-15",
+    "drs:status": "Current",
+    "drs:title": "Forward Pressure Bulkhead",
+    "drs:revNum": "0",
+    "drs:productType": [
+     "Aircraft"
+    ],
+    "drs:productSubType": [
+     "Small Airplane"
+    ],
+    "drs:saibMake": [
+     "Ontic Engineering and Manufacturing Inc."
+    ],
+    "drs:saibModel": [
+     "SA227-AC (C-26A)",
+     "SA227-AT",
+     "SA227-BC (C-26A)",
+     "SA227-CC",
+     "SA227-DC (C-26B)",
+     "SA227-PC"
+    ],
+    "drs:partNumber": [],
+    "drs:subPart": [],
+    "drs:sectionNumber": [],
+    "drs:saibIssueDate": "2026-09-09",
+    "drs:comments": null,
+    "drs:SFARReference": null,
+    "drs:CARReference": null,
+    "drs:ADReference": null,
+    "drs:ACReference": null,
+    "drs:documentOwner": [
+     "AIR-700: Compliance & Airworthiness Division"
+    ],
+    "drs:primaryRespOffice": [
+     "AIR-720: Operational Safety Branch"
+    ]
+   }
+  }
+ ],
+ "AC": [
+  {
+   "doctype": "AC",
+   "guid": "22F35EBA0DCFD1C6862580E3006097E8",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/22F35EBA0DCFD1C6862580E3006097E8.0001",
+   "last_modified": "2026-10-23T17:36:33.090000Z",
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/d0d12239-164e-4553-b345-b9ad22bd7ea0",
+   "file_name": "AC 21-46A.pdf",
+   "has_attachments": true,
+   "attachments_url": "https://drs.faa.gov/api/drs/data-pull/get-other-attachment-details/d0d12239-164e-4553-b345-b9ad22bd7ea0",
+   "metadata": {
+    "drs:documentNumber": "AC 21-46A",
+    "drs:status": "Current",
+    "drs:docID": "AC 21-46A",
+    "drs:changeNumber": null,
+    "drs:acPolicyNumber": null,
+    "drs:title": "Technical Standard Order Program",
+    "drs:cancels": [
+     "AC 21-46"
+    ],
+    "drs:cancelledBy": null,
+    "drs:standards": null,
+    "drs:changeDesc": null,
+    "drs:partNumber": [
+     "Part 21",
+     "Part 21",
+     "Part 21",
+     "Part 21",
+     "Part 21",
+     "Part 21"
+    ],
+    "drs:subPart": [
+     "Subpart O - Technical Standard Order Approvals",
+     "Subpart O - Technical Standard Order Approvals",
+     "Subpart O - Technical Standard Order Approvals",
+     "Subpart O - Technical Standard Order Approvals",
+     "Subpart O - Technical Standard Order Approvals",
+     "Subpart O - Technical Standard Order Approvals"
+    ],
+    "drs:sectionNumber": [
+     "Sec. 21.618",
+     "Sec. 21.616",
+     "Sec. 21.608",
+     "Sec. 21.610",
+     "Sec. 21.614",
+     "Sec. 21.620"
+    ],
+    "drs:approvalDate": "2017-02-23",
+    "drs:lastReviewedDate": "2017-03-14",
+    "drs:comments": null,
+    "drs:SFARReference": null,
+    "drs:ADReference": null,
+    "drs:EXReference": null,
+    "drs:ACReference": null,
+    "drs:8900Reference": null,
+    "drs:otherOrderReference": null,
+    "drs:airPolicyReference": null,
+    "drs:avsPolicyReference": null,
+    "drs:ABReference": null,
+    "drs:title49Reference": null,
+    "drs:TSOReference": null,
+    "drs:finalRuleReference": null,
+    "drs:NPRMReference": null,
+    "drs:documentOwner": [
+     "AIR"
+    ],
+    "drs:primaryRespOffice": [
+     "AIR-100"
+    ]
+   }
+  }
+ ],
+ "ADNPRM": [
+  {
+   "doctype": "ADNPRM",
+   "guid": "C1E750EBD3507779862572660058A30D",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/C1E750EBD3507779862572660058A30D.0001",
+   "last_modified": "2025-11-22T00:24:16.788000Z",
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/60ee3138-d04e-4de6-8a87-a36713ad3ec1",
+   "file_name": "DRS_FAA-2005-2.html",
+   "has_attachments": false,
+   "attachments_url": null,
+   "metadata": {
+    "drs:documentNumber": "FAA-2005-22430",
+    "drs:status": "Historical",
+    "drs:adnprmMake": [
+     "Turbomeca S.A."
+    ],
+    "drs:adnprmModel": null,
+    "drs:adnprmProductType": [
+     "Engine"
+    ],
+    "drs:adnprmProductSubtype": null,
+    "drs:title": "Airworthiness Directives; Turbomeca Arrius 2 F Turboshaft Engines",
+    "drs:adnprmAction": "Notice of proposed rulemaking (NPRM).",
+    "drs:adnprmAddresses": null,
+    "drs:adnprmCitation": "Federal Register: January 17, 2007 (Volume 72, Number 10)",
+    "drs:adnprmPageNumber": "Page 1947-1949",
+    "drs:adnprmSummary": "The FAA proposes to supersede an existing airworthiness directive (AD) for Turbomeca Arrius 2 F turboshaft engines. That AD currently requires removing from service certain serial number (SN) fuel control units (FCUs) or replacing the constant delta pressure diaphragm in those FCUs. This proposed AD would require replacing all FCUs not incorporating modification Tf 55 with FCUs that incorporate mo",
+    "drs:adnprmRegulatoryText": "The Proposed Amendment \n\n\tAccordingly, under the authority delegated to me by the Administrator, the Federal Aviation Administration proposes to amend 14 CFR part 39 as follows: \n\nPART 39--AIRWORTHINESS DIRECTIVES \n\n\t1. The authority citation for part 39 continues to read as follows: \n\n\tAuthority: 49 U.S.C. 106(g), 40113, 44701. \n\nSec.  39.13  [Amended] \n\n\t2. The FAA amends Sec.  39.13 by removing",
+    "drs:adnprmFurtherInfoContact": null,
+    "drs:adnprmSupplementaryInfo": "Comments Invited \n\n\tWe invite you to send any written relevant data, views, or arguments regarding this proposal. Send your comments to an address listed under ADDRESSES. Include \"Docket No. FAA-2005-22430; Directorate Identifier 2005-NE-34-AD'' in the subject line of your comments. We specifically invite comments on the overall regulatory, economic, environmental, and energy aspects of the propos",
+    "drs:adnprmFooter": null,
+    "drs:adnprmOtherADNPRM": "Not Applicable",
+    "drs:adnprmProductIdentifier": "2005-NE-34-AD",
+    "drs:partNumber": [
+     "Part 39"
+    ],
+    "drs:subPart": [
+     null
+    ],
+    "drs:sectionNumber": [
+     null
+    ],
+    "drs:adnprmCitationPublishDate": "2007-01-16",
+    "drs:adnprmIssueDate": "2007-01-10",
+    "drs:adnprmCommentDate": "2007-03-18",
+    "drs:comments": null,
+    "drs:documentOwner": [
+     "AIR-700: Compliance & Airworthiness Division"
+    ],
+    "drs:primaryRespOffice": [
+     "AIR-7E0: Engine Certification Office Branch"
+    ],
+    "drs:ACReference": null,
+    "drs:airPolicyReference": null,
+    "drs:additionalReference": null
+   }
+  },
+  {
+   "doctype": "ADNPRM",
+   "guid": "2B59021F6F86DC9786257FEE0054F9B4",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/2B59021F6F86DC9786257FEE0054F9B4.0001",
+   "last_modified": "2025-03-07T09:33:23.105000Z",
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/a967e7e0-f993-4f8b-af47-147f785a316b",
+   "file_name": "DRS_FAA-2015-6.html",
+   "has_attachments": false,
+   "attachments_url": null,
+   "metadata": {
+    "drs:documentNumber": "FAA-2015-6544",
+    "drs:status": "Historical",
+    "drs:adnprmMake": [
+     "Saab AB,  Saab Aeronautics"
+    ],
+    "drs:adnprmModel": null,
+    "drs:adnprmProductType": [
+     "Aircraft"
+    ],
+    "drs:adnprmProductSubtype": [
+     "Large Airplane"
+    ],
+    "drs:title": "Airworthiness Directives; Saab AB, Saab Aeronautics (Formerly Known as Saab AB, Saab Aerosystems) Airplanes",
+    "drs:adnprmAction": "Supplemental notice of proposed rulemaking (NPRM); reopening of comment period.\n-----------------------------------------------------------------------",
+    "drs:adnprmAddresses": null,
+    "drs:adnprmCitation": "Federal Register Volume 81, Number 133 (Tuesday, July 12, 2016)",
+    "drs:adnprmPageNumber": "Pages 45072-45075",
+    "drs:adnprmSummary": "We are revising an earlier proposed airworthiness directive (AD) for certain Saab AB, Saab Aeronautics Model 340A (SAAB/SF340A) and SAAB 340B airplanes. The NPRM proposed to supersede AD 2012-24-06. AD 2012-24-06 currently requires replacing the stall warning computer (SWC) with a new SWC that provides an artificial stall warning in icing conditions, and modifying the airplane for the replacement ",
+    "drs:adnprmRegulatoryText": "https://federalregister.gov/a/2016-15927",
+    "drs:adnprmFurtherInfoContact": null,
+    "drs:adnprmSupplementaryInfo": null,
+    "drs:adnprmFooter": null,
+    "drs:adnprmOtherADNPRM": "Not Applicable",
+    "drs:adnprmProductIdentifier": "2014-NM-198-AD",
+    "drs:partNumber": [
+     "Part 39"
+    ],
+    "drs:subPart": null,
+    "drs:sectionNumber": null,
+    "drs:adnprmCitationPublishDate": "2016-07-11",
+    "drs:adnprmIssueDate": "2016-06-23",
+    "drs:adnprmCommentDate": "2016-08-25",
+    "drs:comments": null,
+    "drs:documentOwner": null,
+    "drs:primaryRespOffice": null,
+    "drs:ACReference": null,
+    "drs:airPolicyReference": null,
+    "drs:additionalReference": null
+   }
+  }
+ ],
+ "NPRM": [
+  {
+   "doctype": "NPRM",
+   "guid": "F7BDE6BF2E4B980E86257B1100482047",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/F7BDE6BF2E4B980E86257B1100482047.0001",
+   "last_modified": "2013-02-13T00:00:00Z",
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/32efdf28-0a05-46e0-8609-f5a334782722",
+   "file_name": "DRS_12-07.html",
+   "has_attachments": false,
+   "attachments_url": null,
+   "metadata": {
+    "drs:documentNumber": "12-07",
+    "drs:status": "Current",
+    "drs:nprmDocket": "FAA-2011-1136",
+    "drs:nprmNotice": "12-07",
+    "drs:nprmActions": [
+     "Notice 12-07"
+    ],
+    "drs:title": "Air Carrier Contract Maintenance Requirements; Extension of Comment Period",
+    "drs:nprmSummary": "This action extends the comment period for an NPRM that was published November 13, 2012. In that rulemaking, the FAA proposed to amend the maintenance regulations for domestic, flag, and supplemental operations, and commuter and on-demand operations for aircraft type certificated with a passenger seating configuration of 10 seats or more (excluding any pilot seat). It would require these operators",
+    "drs:nprmCitation": "Federal Register Volume 78, Number 29 (Tuesday, February 12, 2013)",
+    "drs:nprmPageNumber": "Pages 9865-9866",
+    "drs:nprmAction": "Notice of proposed rulemaking (NPRM); extension of comment",
+    "drs:nprmAddresses": null,
+    "drs:nprmFurtherInfoContact": null,
+    "drs:nprmSupplementaryInfo": [
+     "SUPPLEMENTARY INFORMATION: See the \"Additional Information\" section for information on how to comment on this proposal and how the FAA will handle comments received. The \"Additional Information\" section also contains related information about the docket. In addition, there is information on obtaining copies of related rulemaking documents.\n\nBackground\n\n\tOn November 13, 2012, the FAA issued Notice No. 12-07, entitled \"Air Carrier Contract Maintenance Requirements\" (77 FR 67584). Comments to that document were to be received on or before February 11, 2013.\n\tBy letter dated January 13, 2013, the Regional Air Cargo Carriers Association (RACCA) requested a 48-day extension of the comment period, to March 31, 2013. The petitioner requested this extension to allow time to adequately assess the impact of the requirements proposed in the NPRM, prepare comments, and develop proposed alternatives. If enacted in its currently-proposed form, RACCA believes the proposed rulemaking would resultin significant unintended consequences, including greater operator cost and manpower requirements than those estimated in the NPRM, loss of efficiency, unbudgeted loss of aircraft availability, and a substantial additional workload for the FAA that would result in a diversion of FAA resources from more safety-critical tasks. It further believes that the rulemaking would add complication to the contract maintenance process without a quantifiable improvement in safety, and therefore it would not serve the public's interest.\n\tWhile the FAA concurs with the petitioner's request for an extension of the comment period on Notice No. 12-07, it does not support a 48-day extension. The FAA finds that an additional 30 days is sufficient for the petitioner to analyze the NPRM and provide meaningful comment to Notice No. 12-07.\n\tAbsent unusual circumstances, the FAA does not anticipate any further extension of the comment period for this rulemaking.\n\nExtension of Comment Period\n\n\tIn accordance with Sec.  11.47(c) of Title 14, Code of Federal Regulations, the FAA has reviewed the petition made by RACCA for extension of the comment period to Notice No. 12-07. This petitioner has shown a substantive interest in the proposed rule and good cause for the extension. The FAA has determined that extension of the comment period is consistent with the public interest, and that good cause exists for taking this action.\n\tAccordingly, the comment period for Notice No. 12-07 is extended until March 13, 2013.\n\nAdditional Information\n\nA. Comments Invited\n\n\tThe FAA invites interested persons to participate in this rulemaking by submitting written comments, data, or views. The agency also invites comments relating to the economic, environmental, energy, or federalism impacts that might result from adopting the proposals in this document. The most helpful comments reference a specific portion of the proposal, explain the reason for any recommended change, and include supporting data. To ensure the docket does not contain duplicate comments, commenters should send only one copy of written comments, or if comments are filed electronically, commenters should submit only one time.\n\tThe FAA will file in the docket all comments it receives, as well as a report summarizing each substantive public contact with FAA personnel concerning this proposed rulemaking. Before acting on this proposal, the FAA will consider all comments it receives on or before the closing date for comments. The FAA will consider comments filed after the comment period has closed if it is possible to do so without incurring expense or delay. The agency may change this proposal in light of the comments it receives.\n\nB. Availability of Rulemaking Documents\n\n\tAn electronic copy of rulemaking documents may be obtained from the Internet by--\n\t1. Searching the Federal eRulemaking Portal (http://www.regulations.gov);\n\t2. Visiting the FAA's Regulations and Policies Web page at http://www.faa.gov/regulations_policies; or\n\t3. Accessing the Government Printing Office's Web page at http://www.gpo.gov/fdsys/.\n\tCopies may also be obtained by sending a request to the Federal Aviation Administration, Office of Rulemaking, ARM-1, 800 Independence Avenue SW., Washington, DC 20591, or by calling (202) 267-9680. Commenters must identify the docket or notice number of this rulemaking.\n\tAll documents the FAA considered in developing this proposed rule, including economic analyses and technical reports, may be accessed from the Internet through the Federal eRulemaking Portal referenced in item (1) above."
+    ],
+    "drs:nprmRegulatoryText": null,
+    "drs:nprmFooter": null,
+    "drs:partNumber": [
+     "Part 121",
+     "Part 135"
+    ],
+    "drs:subPart": null,
+    "drs:sectionNumber": null,
+    "drs:nprmIssueDate": "2013-02-06",
+    "drs:nprmPublishDate": null,
+    "drs:nprmCommentDate": "2013-03-13",
+    "drs:comments": null,
+    "drs:SFARReference": null,
+    "drs:CARReference": null,
+    "drs:ADReference": null,
+    "drs:airPolicyReference": null,
+    "drs:ABReference": null,
+    "drs:documentOwner": null,
+    "drs:primaryRespOffice": null
+   }
+  }
+ ]
+}
