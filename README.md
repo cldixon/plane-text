@@ -58,4 +58,6 @@ bun run deploy    # build, then deploy with cf
 
 Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta), configured in `site/cloudflare/cloudflare.config.ts`. It is a separate project inside `site/` because `cf` does not yet build Astro projects directly: Astro builds `site/dist`, and `cf` packages that directory as static assets. `cf` itself runs on Node 22.18 or later, since it cannot load `cloudflare.config.ts` on Bun yet. Deploying needs `CLOUDFLARE_API_TOKEN`.
 
+`/explore` is an in-browser SQL viewer: DuckDB-WASM (loaded from jsDelivr) queries the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
+
 Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.
