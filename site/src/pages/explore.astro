@@ -1,0 +1,26 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import SqlViewer from "@components/SqlViewer.svelte";
+
+/** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
+const src = "/data/faa-ads/v2026-10-23/ad-final-rules.parquet";
+
+const initialQuery = `SELECT ad_number, effective_date, status, make, subject
+FROM ads
+ORDER BY effective_date DESC
+LIMIT 100`;
+---
+
+<BaseLayout
+  title="Explore airworthiness directives · Plane-text"
+  description="Query FAA airworthiness directives with SQL in your browser."
+  wide
+>
+  <h1>Explore</h1>
+  <p>
+    Query FAA airworthiness directives (final rules, 20,184 rows) with SQL. The query runs in your browser with <a
+      href="https://duckdb.org/docs/api/wasm/overview">DuckDB-WASM</a>, which reads only the parts of the parquet file
+    it needs. The table is <code>ads</code>; try <code>DESCRIBE ads</code> to list its columns.
+  </p>
+  <SqlViewer client:only="svelte" {src} view="ads" {initialQuery} />
+</BaseLayout>
