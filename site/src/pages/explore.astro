@@ -3,7 +3,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
 import SqlViewer from "@components/SqlViewer.svelte";
 
 /** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
-const src = "/data/faa-ads/v2026-10-23/ad-final-rules.parquet";
+const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
 
 const initialQuery = `SELECT ad_number, effective_date, status, make, subject
 FROM ads

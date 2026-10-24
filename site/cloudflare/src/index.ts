@@ -11,7 +11,7 @@
  */
 
 /** R2 object keys exposed to the browser. Nothing else in the bucket is reachable. */
-const EXPOSED_KEYS = new Set<string>(["faa-ads/v2026-10-23/ad-final-rules.parquet"]);
+const EXPOSED_KEYS = new Set<string>(["processed/faa-ads/v2026-10-23/ad-final-rules.parquet"]);
 
 const PREFIX = "/data/";
 

@@ -13,7 +13,7 @@ Run from `site/` with `bun run preview` or `bun run deploy`, or here with `bun r
 `cf dev` simulates the R2 bucket locally under `.wrangler/state`, so it starts empty. Seed it once with the real file (downloaded with the S3 API, e.g. boto3):
 
 ```sh
-bunx cf r2 objects put faa-ads/v2026-10-23/ad-final-rules.parquet --local --persist-to .wrangler/state \
+bunx cf r2 objects put processed/faa-ads/v2026-10-23/ad-final-rules.parquet --local --persist-to .wrangler/state \
   --bucket-name plane-text --content-type application/vnd.apache.parquet --file <path/to/ad-final-rules.parquet>
 ```
 
