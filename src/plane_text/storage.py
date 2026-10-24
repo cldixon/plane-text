@@ -7,13 +7,32 @@ defaults to `plane-text` and can be overridden with PLANETEXT_BUCKET.
 
 from __future__ import annotations
 
+import argparse
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 
 import boto3
 import polars as pl
 
 DEFAULT_BUCKET = "plane-text"
+
+# Layers under the data directory (and in the bucket). `raw` holds each source
+# as delivered, converted to parquet; `processed` holds the cleaned,
+# user-facing tables built from raw. Downloads are cached under `cache`.
+RAW = "raw"
+PROCESSED = "processed"
+CACHE = "cache"
+
+
+def layer_path(data_dir: Path, layer: str, dataset: str, snapshot: str, name: str) -> Path:
+    """`<data_dir>/<layer>/<dataset>/v<snapshot>/<name>.parquet`."""
+    return data_dir / layer / dataset / f"v{snapshot}" / f"{name}.parquet"
+
+
+def cache_dir(data_dir: Path, dataset: str) -> Path:
+    """Where a dataset's source downloads are cached: `<data_dir>/cache/<dataset>`."""
+    return data_dir / CACHE / dataset
 
 
 def write_parquet(frame: pl.DataFrame, path: Path, provenance: dict[str, str]) -> None:
@@ -27,6 +46,25 @@ def read_provenance(path: Path) -> dict[str, str]:
     metadata = pl.read_parquet_metadata(path)
     prefix = "plane_text."
     return {k.removeprefix(prefix): v for k, v in metadata.items() if k.startswith(prefix)}
+
+
+def derived_provenance(source: Path, data_dir: Path, **extra: str) -> dict[str, str]:
+    """Provenance for a processed table: `source`'s own, plus its key and when it was built.
+
+    `extra` overrides or adds entries (the layer, the table name, and so on).
+    """
+    built = {"built_from": object_key(source, data_dir), "built_at": now()}
+    return read_provenance(source) | {"layer": PROCESSED} | built | extra
+
+
+def now() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def modified_at(*paths: Path) -> str:
+    """When the newest of `paths` was written: the retrieval time of cached downloads."""
+    latest = max(path.stat().st_mtime for path in paths)
+    return datetime.fromtimestamp(latest, UTC).isoformat(timespec="seconds")
 
 
 def bucket() -> str:
@@ -43,3 +81,23 @@ def upload(path: Path, data_dir: Path) -> str:
     s3 = boto3.client("s3", endpoint_url=os.environ["S3_API_ENDPOINT"], region_name="auto")
     s3.upload_file(str(path), bucket(), key)
     return key
+
+
+def parse_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
+    """The options every layered pipeline shares; `steps` lists the layers to build."""
+    parser.add_argument("--data-dir", type=Path, default=Path("data"))
+    parser.add_argument(
+        "--snapshot",
+        default=datetime.now(UTC).date().isoformat(),
+        help="snapshot date (YYYY-MM-DD) naming the cache and the v<snapshot> versions; default today",
+    )
+    parser.add_argument(
+        "--step",
+        choices=[RAW, PROCESSED, "all"],
+        default="all",
+        help="build raw from the source, processed from raw, or both (default)",
+    )
+    parser.add_argument("--upload", action="store_true", help="upload what was built to R2")
+    args = parser.parse_args()
+    args.steps = [RAW, PROCESSED] if args.step == "all" else [args.step]
+    return args
