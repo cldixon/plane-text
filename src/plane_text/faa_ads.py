@@ -4,10 +4,16 @@ One row per DRS document. Corrections are published as their own documents
 and share the AD number of the AD they correct, so `ad_number` is not unique;
 `guid` is. Pages are cached as gzipped JSON so a re-run only re-parses.
 
-    uv run python -m plane_text.faa_ads            # full read, write parquet
-    uv run python -m plane_text.faa_ads --upload   # ...and upload to R2
+- raw: every record as read, one row each (duplicates kept), with the API's
+  own field names (`documentGuid`, `drs:title`, ...) and values as text;
+  list-valued DRS fields stay lists of text. Plus `page_offset`/`page_row`.
+- processed: built from raw. One row per guid, text cleaned, dates typed.
 
-Needs DRS_API_KEY in the environment.
+    uv run python -m plane_text.faa_ads                       # raw, then processed
+    uv run python -m plane_text.faa_ads --step processed      # rebuild processed from raw
+    uv run python -m plane_text.faa_ads --upload              # ...and upload to R2
+
+The raw step needs DRS_API_KEY in the environment; the processed step does not.
 """
 
 from __future__ import annotations
@@ -16,7 +22,6 @@ import argparse
 import gzip
 import json
 import re
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +31,7 @@ from faa_drs import PAGE_SIZE, DocType, Document, DRSClient
 from plane_text import storage
 
 DATASET = "faa-ads"
+NAME = "ad-final-rules"
 DOCTYPE = DocType.ADFRAWD
 
 # Values DRS uses in place of a missing one.
@@ -121,7 +127,57 @@ def fetch_pages(drs: DRSClient, cache: Path) -> list[list[dict[str, Any]]]:
         offset += len(docs)
 
 
-# --- parsing ----------------------------------------------------------------
+# --- raw --------------------------------------------------------------------
+
+# The faa-drs SDK's names for a document's common fields, mapped to the API's.
+API_NAMES = {name: field.alias or name for name, field in Document.model_fields.items() if name != "metadata"}
+PAGE_COLUMNS = ["page_offset", "page_row"]
+
+
+def as_text(value: Any) -> Any:
+    """A JSON value as text: booleans as `true`/`false`, lists item by item, null kept."""
+    if isinstance(value, list):
+        return [as_text(item) for item in value]
+    if isinstance(value, bool):
+        return json.dumps(value)
+    return None if value is None else str(value)
+
+
+def flatten(record: dict[str, Any]) -> dict[str, Any]:
+    """A cached record as the API delivered it: common fields under their API names, then metadata."""
+    common = {API_NAMES[k]: as_text(v) for k, v in record.items() if k != "metadata"}
+    return common | {k: as_text(v) for k, v in record["metadata"].items()}
+
+
+def raw_frame(pages: list[list[dict[str, Any]]]) -> pl.DataFrame:
+    """Every record as read, one row each, with where it sits in the read (`page_offset`, `page_row`).
+
+    A field is a list column if any record has a list there, text otherwise.
+    """
+    rows: list[dict[str, Any]] = []
+    offset = 0
+    for docs in pages:
+        rows += [flatten(r) | {"page_offset": offset, "page_row": i} for i, r in enumerate(docs)]
+        offset += len(docs)
+    fields = list(dict.fromkeys(k for row in rows for k in row if k not in PAGE_COLUMNS))
+    lists = {k for row in rows for k, v in row.items() if isinstance(v, list)}
+    for row in rows:
+        if mixed := [k for k in lists if row.get(k) is not None and not isinstance(row[k], list)]:
+            raise ValueError(f"{row.get('documentGuid')}: text where other records have lists: {mixed}")
+    schema = {k: pl.List(pl.String) if k in lists else pl.String for k in fields}
+    return pl.DataFrame(rows, schema=schema | {"page_offset": pl.Int32, "page_row": pl.Int16})
+
+
+def records(raw: pl.DataFrame) -> list[dict[str, Any]]:
+    """Raw rows back into API-shaped records, for `Document.model_validate`."""
+    flag = API_NAMES["has_attachments"]
+    return [
+        row | {flag: json.loads(row[flag]) if row[flag] else False}
+        for row in raw.drop(PAGE_COLUMNS).iter_rows(named=True)
+    ]
+
+
+# --- processed --------------------------------------------------------------
 
 
 def clean_text(value: Any) -> str | None:
@@ -164,38 +220,54 @@ def to_frame(records: list[dict[str, Any]]) -> pl.DataFrame:
 # --- pipeline ---------------------------------------------------------------
 
 
-def run(data_dir: Path, upload: bool) -> Path:
-    snapshot = datetime.now(UTC).date().isoformat()
-    cache = data_dir / "raw" / DATASET / snapshot
+def build_raw(data_dir: Path, snapshot: str) -> Path:
+    cache = storage.cache_dir(data_dir, DATASET) / snapshot
     with DRSClient() as drs:
         pages = fetch_pages(drs, cache)
 
-    frame = to_frame([record for page in pages for record in page])
-    path = data_dir / DATASET / f"v{snapshot}" / "ad-final-rules.parquet"
+    frame = raw_frame(pages)
+    path = storage.layer_path(data_dir, storage.RAW, DATASET, snapshot, NAME)
     storage.write_parquet(
         frame,
         path,
         provenance={
             "dataset": DATASET,
+            "layer": storage.RAW,
             "source": f"FAA Dynamic Regulatory System, document type {DOCTYPE}",
             "source_url": "https://drs.faa.gov/api/drs/data-pull/ADFRAWD",
             "snapshot": snapshot,
-            "retrieved_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "retrieved_at": storage.modified_at(*cache.glob("page-*.json.gz")),
         },
     )
     print(f"wrote {frame.height} rows to {path}")
-    if upload:
-        key = storage.upload(path, data_dir)
-        print(f"uploaded to r2://{storage.bucket()}/{key}")
     return path
+
+
+def build_processed(data_dir: Path, snapshot: str) -> Path:
+    source = storage.layer_path(data_dir, storage.RAW, DATASET, snapshot, NAME)
+    frame = to_frame(records(pl.read_parquet(source)))
+    path = storage.layer_path(data_dir, storage.PROCESSED, DATASET, snapshot, NAME)
+    storage.write_parquet(frame, path, storage.derived_provenance(source, data_dir))
+    print(f"wrote {frame.height} rows to {path}")
+    return path
+
+
+def run(data_dir: Path, snapshot: str, steps: list[str], upload: bool) -> list[Path]:
+    paths = []
+    if storage.RAW in steps:
+        paths.append(build_raw(data_dir, snapshot))
+    if storage.PROCESSED in steps:
+        paths.append(build_processed(data_dir, snapshot))
+    if upload:
+        for path in paths:
+            print(f"uploaded to r2://{storage.bucket()}/{storage.upload(path, data_dir)}")
+    return paths
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data-dir", type=Path, default=Path("data"))
-    parser.add_argument("--upload", action="store_true", help="upload the parquet to R2")
-    args = parser.parse_args()
-    run(args.data_dir, args.upload)
+    args = storage.parse_args(parser)
+    run(args.data_dir, args.snapshot, args.steps, args.upload)
 
 
 if __name__ == "__main__":

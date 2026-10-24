@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import polars as pl
+import pytest
 from faa_drs import Document
 
 from plane_text import faa_ads
@@ -71,6 +72,33 @@ def test_clean_text():
     assert faa_ads.clean_text("  a\t\tb \r\n\n\n\n c  ") == "a b\n\nc"
     assert faa_ads.clean_text("Unknown") is None
     assert faa_ads.clean_text(None) is None
+
+
+def test_raw_frame_keeps_api_names_and_text():
+    raw = faa_ads.raw_frame([RECORDS, RECORDS[:1]])
+    assert raw.height == 4  # a record read twice stays twice in raw
+    assert raw.columns[:3] == ["doctype", "documentGuid", "documentURL"]
+    assert "drs:adfrawdRegulatoryText" in raw.columns
+    assert raw.columns[-2:] == ["page_offset", "page_row"]
+    assert raw["page_offset"].to_list() == [0, 0, 0, 3]
+    assert raw["page_row"].to_list() == [0, 1, 2, 0]
+    assert raw.schema["hasMoreAttachments"] == pl.String
+    assert set(raw["hasMoreAttachments"]) <= {"true", "false"}
+    assert raw.schema["drs:adfrawdModel"] == pl.List(pl.String)
+    legacy = raw.filter(pl.col("drs:documentNumber") == "50-05-01").row(0, named=True)
+    assert legacy["drs:adfrawdDocketNo"] == "Unknown"  # placeholders are cleaned in processed, not raw
+
+
+def test_processed_from_raw_matches_the_records():
+    raw = faa_ads.raw_frame([RECORDS, RECORDS[:1]])
+    assert faa_ads.to_frame(faa_ads.records(raw)).equals(frame())
+
+
+def test_raw_frame_rejects_text_where_lists_are_expected():
+    mixed = json.loads(json.dumps(RECORDS))
+    mixed[0]["metadata"]["drs:adfrawdModel"] = "369D"
+    with pytest.raises(ValueError):
+        faa_ads.raw_frame([mixed])
 
 
 def test_fetch_pages_reuses_cache(tmp_path: Path):

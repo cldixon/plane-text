@@ -31,17 +31,39 @@ uv run ty check
 uv run python -m plane_text.ecfr                # latest issue -> data/ecfr-title14/v<date>/sections.parquet
 uv run python -m plane_text.ecfr --limit 5      # first five parts only
 uv run python -m plane_text.ecfr --upload       # also upload to R2
-uv run python -m plane_text.faa_ads             # all AD final rules -> data/faa-ads/v<today>/ad-final-rules.parquet
-uv run python -m plane_text.faa_sdrs            # all SDR years -> data/faa-sdrs/v<today>/service-difficulty-reports.parquet
-uv run python -m plane_text.faa_sdrs_lookups    # SDR code tables -> data/faa-sdrs-lookups/v<today>/<table>.parquet
 uv run python -m plane_text.ntsb                # NTSB narratives -> data/ntsb-narratives/v<today>/narratives.parquet
 uv run python -m plane_text.ntsb_lookups        # NTSB code tables -> data/ntsb-lookups/v<today>/<table>.parquet
 uv run python -m plane_text.ntsb_findings       # NTSB coded findings -> data/ntsb-findings/v<today>/<table>.parquet
 ```
 
-Raw source files are cached under `data/raw/`, so re-runs only re-parse. Each parquet file carries its provenance (source, source URL, issue date, retrieval time) as `plane_text.*` key-value metadata.
+Each parquet file carries its provenance (source, source URL, snapshot, retrieval time) as `plane_text.*` key-value metadata.
 
-Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`. The FAA ADs pipeline also needs `DRS_API_KEY`. The NTSB pipeline needs `mdb-export` from [mdbtools](https://github.com/mdbtools/mdbtools) (`apt-get install mdbtools`) to read the NTSB's Access files.
+### Raw and processed layers
+
+The FAA AD and SDR pipelines write two layers, locally under `data/` and under the same keys in R2:
+
+- `raw/<dataset>/v<snapshot>/<file>.parquet`: the source as delivered, converted to parquet. The source's own field names, every value as text, nothing cleaned, decoded or dropped, plus provenance (`source_file`/`source_row` or `page_offset`/`page_row`). Everything downstream can be rebuilt from raw alone.
+- `processed/<dataset>/v<snapshot>/<file>.parquet`: the user-facing tables, built from raw only: cleaned, typed, one row per real-world entity, with codes decoded to labels. Provenance adds `built_from` (the raw key) and `built_at`.
+
+Source downloads are cached under `data/cache/<dataset>/`, so re-runs only re-parse. `--snapshot` names the version (default today); `--step raw` or `--step processed` builds one layer (default both, raw first); `--upload` uploads what was built. Build the lookups before the SDRs: processed SDRs take their labels from the processed lookups.
+
+```sh
+uv run python -m plane_text.faa_sdrs_lookups    # raw/faa-sdrs-lookups/v<today>/<Workbook>.parquet, processed/.../<table>.parquet
+uv run python -m plane_text.faa_sdrs            # raw|processed/faa-sdrs/v<today>/service-difficulty-reports.parquet
+uv run python -m plane_text.faa_ads             # raw|processed/faa-ads/v<today>/ad-final-rules.parquet
+uv run python -m plane_text.faa_sdrs --step processed --snapshot 2026-10-23   # rebuild processed from raw
+uv run python -m plane_text.faa_sdrs --years 2024 2025 --upload
+```
+
+| Dataset | Raw | Processed |
+| --- | --- | --- |
+| `faa-ads` | every DRS record as read (duplicates kept), API field names (`documentGuid`, `drs:title`, ...), text and lists of text | one row per DRS document (`guid`): placeholders dropped, whitespace collapsed, dates typed |
+| `faa-sdrs` | every row of every yearly CSV, the FAA's 76 column names, text (empty fields null) | one row per report (`operator_control_number`): snake_case, trimmed, dates and measures typed, codes uppercased with labels beside them |
+| `faa-sdrs-lookups` | each workbook in the Look-Up Tables zip with its own headers, and the JASC PDF's text lines (`JASC_Code`) | one cleaned table per code set, plus `jasc` (chapter, chapter title, short title, reporting instructions) |
+
+In processed SDRs, every code column `x_code` is followed by its label `x` (submitter type, SDR type, nature of condition a–c, precautionary procedure a–d, stage of operation, how discovered, part and component time-since codes), `jasc_code` by `jasc_chapter`, `jasc_chapter_title` and `jasc_title`, and `part_location` (free text) by `part_location_zone_code` and `part_location_zone` where it names a zone (`ZONE 200`, `ZN 200 FUS TOP` and sub-zones like `ZONE 221` map to major zone 200). A code with no entry in the lookup keeps its code and gets a null label. Hours, cycles, crack length, number of cracks and corrosion level are numeric; a value that does not parse becomes null, the count of such values is recorded in the `plane_text.unparsed` metadata, and the original text stays in raw. Station, stringer, butt line and water line columns are location designators (`727B`, `RIB 10`, `Y1292`), so they stay text.
+
+Uploading needs R2's S3-compatible credentials in the environment: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`. The FAA ADs raw step also needs `DRS_API_KEY`. The NTSB pipeline needs `mdb-export` from [mdbtools](https://github.com/mdbtools/mdbtools) (`apt-get install mdbtools`) to read the NTSB's Access files.
 
 ## Site
 
