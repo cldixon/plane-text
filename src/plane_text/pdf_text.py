@@ -14,7 +14,7 @@ import re
 import subprocess
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 # A page with fewer letters and digits than this is treated as a scan.
@@ -34,6 +34,8 @@ class Extracted:
     pages: list[str]
     ocr_pages: list[int]  # 1-based page numbers read with OCR
     error: str | None = None
+    # Pages that look scanned but were not OCR'd (OCR off), left for a later run.
+    ocr_pending_pages: list[int] = field(default_factory=list)
 
     @property
     def text(self) -> str:
@@ -99,37 +101,46 @@ def extract(pdf: Path, ocr: bool = True) -> Extracted:
         pages = text_layer(pdf)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         return Extracted(pages=[], ocr_pages=[], error=f"pdftotext: {error}")
-    ocr_pages = []
+    ocr_pages, pending = [], []
     for number, page in enumerate(pages, 1):
-        if ocr and needs_ocr(page):
-            try:
-                pages[number - 1] = ocr_page(pdf, number)
-                ocr_pages.append(number)
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, StopIteration):
-                pass  # keep whatever the text layer had
-    return Extracted(pages=[clean(p) for p in pages], ocr_pages=ocr_pages)
+        if not needs_ocr(page):
+            continue
+        if not ocr:
+            pending.append(number)
+            continue
+        try:
+            pages[number - 1] = ocr_page(pdf, number)
+            ocr_pages.append(number)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, StopIteration):
+            pending.append(number)  # keep whatever the text layer had
+    return Extracted(pages=[clean(p) for p in pages], ocr_pages=ocr_pages, ocr_pending_pages=pending)
 
 
 def cache_path(pdf: Path) -> Path:
     return pdf.with_name(pdf.name + ".text.json")
 
 
-def extract_cached(pdf: Path) -> Extracted:
-    """Extract once; later calls read the cached result."""
+def extract_cached(pdf: Path, ocr: bool = True) -> Extracted:
+    """Extract once; later calls read the cached result.
+
+    Only OCR'd results are cached: without OCR the text layer is fast to
+    re-read, and a later OCR run should not find a stale text-only result.
+    """
     path = cache_path(pdf)
     if path.exists():
         return Extracted(**json.loads(path.read_text()))
-    result = extract(pdf)
-    path.write_text(json.dumps(asdict(result)))
+    result = extract(pdf, ocr)
+    if ocr:
+        path.write_text(json.dumps(asdict(result)))
     return result
 
 
-def extract_all(pdfs: list[Path], workers: int = 4) -> dict[Path, Extracted]:
+def extract_all(pdfs: list[Path], workers: int = 4, ocr: bool = True) -> dict[Path, Extracted]:
     """Extract many files in parallel, printing progress every 50 files."""
     results: dict[Path, Extracted] = {}
     with ProcessPoolExecutor(max_workers=workers) as pool:
         for i, (pdf, result) in enumerate(
-            zip(pdfs, pool.map(extract_cached, pdfs, chunksize=4), strict=True), 1
+            zip(pdfs, pool.map(extract_cached, pdfs, [ocr] * len(pdfs), chunksize=4), strict=True), 1
         ):
             results[pdf] = result
             if i % 50 == 0 or i == len(pdfs):
@@ -145,11 +156,14 @@ def main() -> None:
     )
     parser.add_argument("dirs", nargs="+", type=Path)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--no-ocr", action="store_true", help="text layer only; record scanned pages as pending"
+    )
     args = parser.parse_args()
     for directory in args.dirs:
         pdfs = sorted(p for p in directory.rglob("*") if p.is_file() and p.suffix.lower() == ".pdf")
         print(f"{directory}: {len(pdfs)} PDFs")
-        results = extract_all(pdfs, args.workers)
+        results = extract_all(pdfs, args.workers, ocr=not args.no_ocr)
         ocr = sum(len(r.ocr_pages) for r in results.values())
         errors = sum(1 for r in results.values() if r.error)
         print(f"{directory}: {ocr} pages read with OCR, {errors} unreadable files")

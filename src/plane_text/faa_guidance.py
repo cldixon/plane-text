@@ -2,9 +2,11 @@
 
 One row per DRS document: its metadata, plus the text of its main PDF. The
 text layer is used where a page has one and OCR where it does not (see
-pdf_text), with the OCR'd page numbers recorded per row.
+pdf_text). Each row records which pages were OCR'd and, with --no-ocr, which
+scanned pages still await OCR (cached OCR results are used either way).
 
     uv run python -m plane_text.faa_guidance SAIB AC            # write parquet
+    uv run python -m plane_text.faa_guidance SAIB AC --no-ocr   # skip new OCR
     uv run python -m plane_text.faa_guidance SAIB AC --upload   # ...and upload to R2
 
 Needs DRS_API_KEY, poppler-utils and tesseract-ocr.
@@ -83,6 +85,7 @@ TEXT_COLUMNS = {
     "text": pl.String,
     "pages": pl.Int32,
     "ocr_pages": pl.List(pl.Int32),
+    "ocr_pending_pages": pl.List(pl.Int32),
     "file_name": pl.String,
     "drs_url": pl.String,
     "last_modified": pl.Datetime("us", "UTC"),
@@ -104,6 +107,7 @@ def to_row(doc: Document, spec: DocType, extracted: pdf_text.Extracted | None) -
         "text": (extracted.text or None) if extracted else None,
         "pages": len(extracted.pages) if extracted else None,
         "ocr_pages": extracted.ocr_pages if extracted else None,
+        "ocr_pending_pages": extracted.ocr_pending_pages if extracted else None,
         "file_name": doc.file_name,
         "drs_url": doc.url,
         "last_modified": doc.last_modified,
@@ -121,7 +125,9 @@ def schema(spec: DocType) -> dict[str, Any]:
     }
 
 
-def build(records: list[dict[str, Any]], spec: DocType, cache: Path, workers: int) -> pl.DataFrame:
+def build(
+    records: list[dict[str, Any]], spec: DocType, cache: Path, workers: int, ocr: bool = True
+) -> pl.DataFrame:
     docs = [Document.model_validate(r) for r in records]
     docs = list({d.guid: d for d in docs}.values())  # a read across a DRS update can repeat one
     pdfs = {
@@ -129,12 +135,12 @@ def build(records: list[dict[str, Any]], spec: DocType, cache: Path, workers: in
         for d in docs
         if (p := drs.file_path(cache, d)) and p.exists() and p.suffix.lower() == ".pdf"
     }
-    extracted = pdf_text.extract_all(sorted(pdfs.values()), workers)
+    extracted = pdf_text.extract_all(sorted(pdfs.values()), workers, ocr)
     rows = [to_row(d, spec, extracted.get(pdfs[d.guid]) if d.guid in pdfs else None) for d in docs]
     return pl.DataFrame(rows, schema=schema(spec))
 
 
-def run(codes: list[str], data_dir: Path, upload: bool, workers: int) -> list[Path]:
+def run(codes: list[str], data_dir: Path, upload: bool, workers: int, ocr: bool = True) -> list[Path]:
     snapshot = datetime.now(UTC).date().isoformat()
     paths = []
     with DRSClient() as client:
@@ -143,7 +149,7 @@ def run(codes: list[str], data_dir: Path, upload: bool, workers: int) -> list[Pa
             cache = drs.cache_dir(data_dir, code, snapshot)
             records = drs.fetch_pages(client, code, cache)
             drs.fetch_files(client, records, cache)
-            frame = build(records, spec, cache, workers)
+            frame = build(records, spec, cache, workers, ocr)
             path = data_dir / spec.dataset / f"v{snapshot}" / "documents.parquet"
             storage.write_parquet(
                 frame,
@@ -168,9 +174,12 @@ def main() -> None:
     parser.add_argument("codes", nargs="+", choices=sorted(DOCTYPES))
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--no-ocr", action="store_true", help="use cached OCR where present, text layer otherwise"
+    )
     parser.add_argument("--upload", action="store_true", help="upload the parquet to R2")
     args = parser.parse_args()
-    run(args.codes, args.data_dir, args.upload, args.workers)
+    run(args.codes, args.data_dir, args.upload, args.workers, ocr=not args.no_ocr)
 
 
 if __name__ == "__main__":
