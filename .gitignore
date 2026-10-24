@@ -10,3 +10,4 @@ site/dist/
 site/.astro/
 .wrangler/
 site/cloudflare/.cloudflare/
+.claude/worktrees/
