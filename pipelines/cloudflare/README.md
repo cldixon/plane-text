@@ -23,9 +23,10 @@ The inactivity timeout matters for long runs: Cloudflare stops a container soon 
 curl -X POST -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads
 curl -X POST -H "Authorization: Bearer $RUN_TOKEN" "https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads?snapshot=2026-10-27"
 curl -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads   # latest 20 runs
+curl -X DELETE -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads   # stop the current run
 ```
 
-`POST` answers 202 with the new run, or 409 with the current one if the pipeline is already running. Container output (the pipeline's own log) is in the Worker's observability logs.
+`POST` answers 202 with the new run, or 409 with the current one if the pipeline is already running. `DELETE` records the current run as cancelled and destroys its container. Right after a deploy, a Durable Object still running the previous code can answer 500 until it restarts; retry. Container output (the pipeline's own log) is in the Worker's observability logs.
 
 To add a pipeline, add it to `PIPELINES` in `src/index.ts`, and any secret it needs to the config and to the container's `env`. A pipeline needing other system tools (mdbtools for NTSB) needs them in the `Dockerfile`.
 

@@ -3,6 +3,7 @@
  *
  *   POST /runs/<pipeline>[?snapshot=YYYY-MM-DD]   start a run (202), or 409 if one is running
  *   GET  /runs/<pipeline>                         the latest runs, newest first
+ *   DELETE /runs/<pipeline>                       stop the current run (its container is destroyed)
  *
  * Both need `Authorization: Bearer <RUN_TOKEN>`. Each pipeline has its own
  * Durable Object, so it runs at most once at a time; the object starts the
@@ -57,7 +58,7 @@ type Run = {
 	command: string[];
 	instance: string;
 	snapshot: string | null;
-	state: "running" | "succeeded" | "failed";
+	state: "running" | "succeeded" | "failed" | "cancelled";
 	startedAt: string;
 	finishedAt?: string;
 	error?: string;
@@ -101,6 +102,16 @@ export class PipelineRun extends DurableObject<Env> {
 		this.ctx.waitUntil(this.watch(run.id));
 		await this.ctx.storage.setAlarm(Date.now() + CHECK_EVERY_MS);
 		return { started: true, run };
+	}
+
+	/** Stops the current run, if any: recorded as cancelled, then its container destroyed. */
+	async cancel(): Promise<Run | undefined> {
+		const run = (await this.runs())[0];
+		if (run?.state !== "running") return undefined;
+		await this.finish(run.id, "cancelled");
+		const container = this.ctx.container!;
+		if (container.running) await container.destroy(new Error("run cancelled"));
+		return (await this.runs())[0];
 	}
 
 	async history(): Promise<Run[]> {
@@ -183,6 +194,10 @@ export default {
 		const runner = runs.getByName(pipeline);
 
 		if (request.method === "GET") return json(await runner.history());
+		if (request.method === "DELETE") {
+			const run = await runner.cancel();
+			return run ? json(run) : json({ error: "no run in progress" }, 409);
+		}
 		if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
 		const snapshot = new URL(request.url).searchParams.get("snapshot");
 		if (snapshot !== null && !/^\d{4}-\d{2}-\d{2}$/.test(snapshot)) {
