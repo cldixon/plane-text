@@ -98,3 +98,13 @@ def test_pdfs_by_guid_finds_cached_files(tmp_path: Path):
     path.write_bytes(b"%PDF")
     assert faa_guidance.pdfs_by_guid([record, record], tmp_path) == {SAIB: path}
     assert drs.cache_dir(tmp_path, "SAIB", "2026-10-24") == tmp_path / "cache" / "drs" / "SAIB" / "2026-10-24"
+
+
+def test_maintenance_alerts():
+    row = frame("ALERTS").row(0, named=True)
+    assert (row["document_number"], row["year"]) == ("JAN2009", "2009")
+    assert row["title"] == "Maintenance Alert for 2009 January"
+    assert row["issue_date"] == date(2009, 2, 20)
+    assert row["cfr_parts"] == ["Part 125"]
+    assert row["specialties"] == ["Avionics", "Maintenance"]
+    assert row["text"] is None  # no PDF pages given

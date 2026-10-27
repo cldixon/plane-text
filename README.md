@@ -18,6 +18,7 @@ Each parquet file carries its provenance (source, source URL, snapshot, retrieva
 | `faa-proposed-rules` | FAA AD proposed rules (`ADNPRM`) and NPRMs (`NPRM`), DRS; Federal Register API | DRS records as read; Federal Register texts as fetched | `ad-proposed-rules`, `proposed-rules`: one row per DRS document |
 | `faa-saibs` | Special Airworthiness Information Bulletins (`SAIB`), DRS PDFs | `documents` (DRS records), `document-pages` (one row per PDF page: text layer, OCR or pending OCR) | `documents`: one row per bulletin with its text |
 | `faa-advisory-circulars` | Advisory circulars (`AC`), DRS PDFs | as SAIBs | `documents`: one row per circular with its text |
+| `faa-maintenance-alerts` | Aviation Maintenance Alerts (`ALERTS`, the monthly AC 43-16A issues DRS holds, 2004–2012), DRS PDFs | as SAIBs | `documents`: one row per monthly alert with its text |
 | `faa-sdrs` | FAA Service Difficulty Reports, yearly CSVs, 1995 onward | every row of every yearly CSV, the FAA's 76 columns | `service-difficulty-reports`: one row per report, codes decoded |
 | `faa-sdrs-lookups` | FAA SDRS Look-Up Tables and the 2008 JASC code table | each workbook as delivered, and the JASC PDF's text lines | one cleaned table per code set, plus `jasc` |
 | `ntsb` (raw only) | NTSB accident databases `avall.zip` (2008 onward) and `Pre2008.zip` (1982–2007) | `<db>-<table>`: each Access table as exported, `<db>` is `avall` or `Pre2008` | (see the three below) |
@@ -48,7 +49,7 @@ Every pipeline takes `--snapshot` (the version date, default today; for eCFR the
 uv run python -m plane_text.ecfr                          # latest eCFR issue
 uv run python -m plane_text.faa_ads
 uv run python -m plane_text.faa_proposed_rules
-uv run python -m plane_text.faa_guidance SAIB AC --no-ocr # --no-ocr: use cached OCR, leave other scans pending
+uv run python -m plane_text.faa_guidance SAIB AC ALERTS --no-ocr # --no-ocr: use cached OCR, leave other scans pending
 uv run python -m plane_text.faa_sdrs_lookups              # before faa_sdrs: processed SDRs read the processed lookups
 uv run python -m plane_text.faa_sdrs
 uv run python -m plane_text.ntsb_lookups                  # before ntsb and ntsb_findings, for the same reason
@@ -62,13 +63,13 @@ Caches live under `data/cache/<source>/`: DRS under `drs/<doctype>/<snapshot>/`,
 Requirements beyond Python:
 
 - R2 uploads: `S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The bucket defaults to `plane-text`; override it with `PLANETEXT_BUCKET`.
-- DRS pipelines (ADs, proposed rules, SAIBs, ACs): `DRS_API_KEY`, for anything not yet cached. Federal Register texts need access to `www.federalregister.gov`.
-- SAIB and AC raw steps: `pdftotext` and `pdftoppm` (poppler-utils), and `tesseract` unless `--no-ocr` is given.
+- DRS pipelines (ADs, proposed rules, SAIBs, ACs, maintenance alerts): `DRS_API_KEY`, for anything not yet cached. Federal Register texts need access to `www.federalregister.gov`.
+- SAIB, AC and maintenance alert raw steps: `pdftotext` and `pdftoppm` (poppler-utils), and `tesseract` unless `--no-ocr` is given.
 - NTSB raw steps: `mdb-export` from [mdbtools](https://github.com/mdbtools/mdbtools) (`apt-get install mdbtools`).
 
 Processed steps need none of these: they read raw parquet only.
 
-The AD pipeline also runs on Cloudflare: a Worker starts it in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
+The AD, SAIB, AC and maintenance alert pipelines also run on Cloudflare: a Worker starts each in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
 
 ## Site
 

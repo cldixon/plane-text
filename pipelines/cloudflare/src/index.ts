@@ -6,21 +6,41 @@
  *
  * Both need `Authorization: Bearer <RUN_TOKEN>`. Each pipeline has its own
  * Durable Object, so it runs at most once at a time; the object starts the
- * container with the pipeline's command, waits for it to exit, and records the run.
+ * container with the pipeline's command on the pipeline's instance type, waits
+ * for it to exit, and records the run.
  *
  * `Env` is generated from cloudflare.config.ts by `cf workers types` into .cloudflare/types/.
  */
 
 import { DurableObject } from "cloudflare:workers";
 
-/** Pipelines that can be started: URL name -> `python -m plane_text.<module>`. */
-const PIPELINES: Record<string, string> = {
-	"faa-ads": "faa_ads",
+type Pipeline = {
+	/** Run as `python -m plane_text.<module> <args> --upload [--snapshot <date>]`. */
+	module: string;
+	args?: string[];
+	instance: "standard-1" | "standard-2" | "standard-3" | "standard-4";
+	/** A run still going after this long is stopped and recorded as failed. */
+	maxHours: number;
 };
 
-const INSTANCE = "standard-1";
-/** A run still going after this long is stopped and recorded as failed. */
-const MAX_RUN_MS = 2 * 60 * 60 * 1000;
+/** Pipelines that can be started, by URL name. PDF pipelines OCR with one Tesseract per vCPU. */
+const PIPELINES: Record<string, Pipeline> = {
+	"faa-ads": { module: "faa_ads", instance: "standard-1", maxHours: 1 },
+	"faa-saibs": { module: "faa_guidance", args: ["SAIB", "--workers", "4"], instance: "standard-4", maxHours: 2 },
+	"faa-maintenance-alerts": {
+		module: "faa_guidance",
+		args: ["ALERTS", "--workers", "4"],
+		instance: "standard-4",
+		maxHours: 2,
+	},
+	"faa-advisory-circulars": {
+		module: "faa_guidance",
+		args: ["AC", "--workers", "4"],
+		instance: "standard-4",
+		maxHours: 8,
+	},
+};
+
 const CHECK_EVERY_MS = 60 * 1000;
 const HISTORY = 20;
 
@@ -28,6 +48,7 @@ type Run = {
 	id: string;
 	pipeline: string;
 	command: string[];
+	instance: string;
 	snapshot: string | null;
 	state: "running" | "succeeded" | "failed";
 	startedAt: string;
@@ -41,19 +62,21 @@ export class PipelineRun extends DurableObject<Env> {
 		const runs = await this.runs();
 		if (runs[0]?.state === "running" && container.running) return { started: false, run: runs[0] };
 
-		const command = ["python", "-m", `plane_text.${PIPELINES[pipeline]}`, "--upload"];
+		const spec = PIPELINES[pipeline]!;
+		const command = ["python", "-m", `plane_text.${spec.module}`, ...(spec.args ?? []), "--upload"];
 		if (snapshot) command.push("--snapshot", snapshot);
 		const run: Run = {
 			id: crypto.randomUUID(),
 			pipeline,
 			command,
+			instance: spec.instance,
 			snapshot,
 			state: "running",
 			startedAt: new Date().toISOString(),
 		};
 		container.start({
 			image: container.images.pipelines,
-			instance: INSTANCE,
+			instance: spec.instance,
 			enableInternet: true,
 			entrypoint: command,
 			env: {
@@ -83,16 +106,16 @@ export class PipelineRun extends DurableObject<Env> {
 		}
 	}
 
-	/** A backstop for `watch`, in case the object was evicted while the container ran. */
+	/** A backstop for `watch`, in case the object was evicted while the container ran; also enforces `maxHours`. */
 	async alarm(): Promise<void> {
 		const run = (await this.runs())[0];
 		if (run?.state !== "running") return;
 		const container = this.ctx.container!;
 		if (!container.running) {
 			await this.finish(run.id, "failed", "container stopped without a recorded exit");
-		} else if (Date.now() - Date.parse(run.startedAt) > MAX_RUN_MS) {
+		} else if (Date.now() - Date.parse(run.startedAt) > PIPELINES[run.pipeline]!.maxHours * 3600_000) {
 			await container.destroy(new Error("run exceeded its time limit"));
-			await this.finish(run.id, "failed", `stopped after ${MAX_RUN_MS / 60000} minutes`);
+			await this.finish(run.id, "failed", `stopped after ${PIPELINES[run.pipeline]!.maxHours} hours`);
 		} else {
 			await this.ctx.storage.setAlarm(Date.now() + CHECK_EVERY_MS);
 		}

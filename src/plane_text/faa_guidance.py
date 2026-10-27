@@ -1,7 +1,7 @@
-"""FAA guidance documents from DRS whose text lives in PDFs: SAIBs and advisory circulars.
+"""FAA guidance documents from DRS whose text lives in PDFs: SAIBs, advisory circulars and maintenance alerts.
 
-One dataset per document type (`faa-saibs`, `faa-advisory-circulars`), each
-with the same layout:
+One dataset per document type (`faa-saibs`, `faa-advisory-circulars`,
+`faa-maintenance-alerts`), each with the same layout:
 
 - raw `documents`: every DRS metadata record as read, one row each (duplicates
   kept), with the API's own field names and values as text, plus
@@ -105,6 +105,25 @@ DOCTYPES = {
             "office": "drs:primaryRespOffice",
         },
         dates={"approval_date": "drs:approvalDate", "last_reviewed_date": "drs:lastReviewedDate"},
+    ),
+    # Monthly Aviation Maintenance Alerts (AC 43-16A); DRS holds the 2004-2012 issues.
+    "ALERTS": DocType(
+        code="ALERTS",
+        dataset="faa-maintenance-alerts",
+        name="Aviation Maintenance Alerts",
+        text={
+            "document_number": "drs:documentNumber",
+            "status": "drs:status",
+            "title": "drs:title",
+            "year": "fsims:docLevel2",
+        },
+        lists={
+            "cfr_parts": "drs:partNumber",
+            "cfr_sections": "drs:sectionNumber",
+            "specialties": "fsims:specialty",
+            "office": "fsims:owner",
+        },
+        dates={"issue_date": "fsims:fileDate"},
     ),
 }
 

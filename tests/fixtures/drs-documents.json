@@ -278,5 +278,56 @@
     "drs:primaryRespOffice": null
    }
   }
+ ],
+ "ALERTS": [
+  {
+   "doctype": "ALERTS",
+   "guid": "92AFCEA2A92502CD86257563004EA135",
+   "url": "https://drs.faa.gov/browse/excelExternalWindow/92AFCEA2A92502CD86257563004EA135.0001",
+   "last_modified": null,
+   "download_url": "https://drs.faa.gov/api/drs/data-pull/download/40b2560c-e21f-48ef-83fa-e8755497eed0",
+   "file_name": "JAN2009.pdf",
+   "has_attachments": true,
+   "attachments_url": "https://drs.faa.gov/api/drs/data-pull/get-other-attachment-details/40b2560c-e21f-48ef-83fa-e8755497eed0",
+   "metadata": {
+    "drs:documentNumber": "JAN2009",
+    "drs:status": "Current",
+    "fsims:revision": null,
+    "fsims:docLevel2": "2009",
+    "drs:title": "Maintenance Alert for 2009 January",
+    "drs:partNumber": [
+     "Part 125"
+    ],
+    "drs:subPart": null,
+    "drs:sectionNumber": null,
+    "drs:docPublishedDate": null,
+    "fsims:fileDate": "2009-02-20",
+    "drs:comments": null,
+    "fsims:librarySubject": [
+     "General Information"
+    ],
+    "fsims:areasOfInterest": [
+     "V4 - Aircraft Equipment and Operational Authorizations"
+    ],
+    "fsims:regulation": [
+     "Administrative"
+    ],
+    "fsims:jobCategory": [
+     "Air Transportation ATOS",
+     "Air Transportation non ATOS",
+     "General Aviation"
+    ],
+    "fsims:specialty": [
+     "Avionics",
+     "Maintenance"
+    ],
+    "fsims:owner": [
+     "AFS-600"
+    ],
+    "fsims:poc": [
+     "AFS-620"
+    ]
+   }
+  }
  ]
 }
