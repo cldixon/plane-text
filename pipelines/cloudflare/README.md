@@ -13,7 +13,9 @@ The PDF pipelines download every PDF and OCR every scanned page on each run (not
 
 - `Dockerfile`: Ubuntu 24.04 with poppler-utils and Tesseract (English), uv, the Python 3.13 that uv installs, the locked dependencies and `src/`. Built from the repository root (`.dockerignore` there keeps the context to `pyproject.toml`, `uv.lock`, `.python-version`, `README.md` and `src/`).
 - `cloudflare.config.ts`: the Worker `plane-text-pipelines`, the Container image, the `PipelineRun` Durable Object that owns the container, and the secrets.
-- `src/index.ts`: the run endpoints and `PipelineRun`. One Durable Object per pipeline, so a pipeline runs at most once at a time. It starts the container (internet on) on the pipeline's instance type with the pipeline's command as entrypoint, records the run, and marks it succeeded or failed when the container exits. An alarm checks every minute as a backstop and stops a run that passes its time limit.
+- `src/index.ts`: the run endpoints and `PipelineRun`. One Durable Object per pipeline, so a pipeline runs at most once at a time. It starts the container (internet on) on the pipeline's instance type with the pipeline's command as entrypoint, records the run, and marks it succeeded or failed when the container exits. Every minute an alarm renews the container's inactivity timeout, re-attaches the wait on the container if the object restarted (after a deploy, say), records a container that vanished without an exit, and stops a run that passes its time limit.
+
+The inactivity timeout matters for long runs: Cloudflare stops a container soon after its Durable Object goes idle, and a pending `monitor()` keeps the object busy for only 15 minutes. Without the timeout, the first advisory circular run was stopped 32 minutes in, its extraction workers killed mid-OCR.
 
 ## Running
 

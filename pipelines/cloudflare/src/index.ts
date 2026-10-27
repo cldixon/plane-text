@@ -42,6 +42,13 @@ const PIPELINES: Record<string, Pipeline> = {
 };
 
 const CHECK_EVERY_MS = 60 * 1000;
+/**
+ * How long the container may outlive an idle Durable Object. Without it, Cloudflare
+ * stops the container soon after the object goes idle, which a pending `monitor()`
+ * only postpones for 15 minutes. The minute alarm keeps waking the object, so this
+ * only has to cover the gaps between alarms.
+ */
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 const HISTORY = 20;
 
 type Run = {
@@ -57,6 +64,9 @@ type Run = {
 };
 
 export class PipelineRun extends DurableObject<Env> {
+	/** The run whose container exit this instance is waiting on. Lost if the object restarts. */
+	private watching: string | undefined;
+
 	async start(pipeline: string, snapshot: string | null): Promise<{ started: boolean; run: Run }> {
 		const container = this.ctx.container!;
 		const runs = await this.runs();
@@ -86,6 +96,7 @@ export class PipelineRun extends DurableObject<Env> {
 				AWS_SECRET_ACCESS_KEY: this.env.AWS_SECRET_ACCESS_KEY,
 			},
 		});
+		await container.setInactivityTimeout(INACTIVITY_TIMEOUT_MS);
 		await this.save([run, ...runs]);
 		this.ctx.waitUntil(this.watch(run.id));
 		await this.ctx.storage.setAlarm(Date.now() + CHECK_EVERY_MS);
@@ -98,6 +109,7 @@ export class PipelineRun extends DurableObject<Env> {
 
 	/** Records the run's outcome when the container exits: a clean exit succeeds, anything else fails. */
 	private async watch(id: string): Promise<void> {
+		this.watching = id;
 		try {
 			await this.ctx.container!.monitor();
 			await this.finish(id, "succeeded");
@@ -106,11 +118,19 @@ export class PipelineRun extends DurableObject<Env> {
 		}
 	}
 
-	/** A backstop for `watch`, in case the object was evicted while the container ran; also enforces `maxHours`. */
+	/**
+	 * Every minute while a run is going: re-attaches `watch` if the object restarted
+	 * since the run began (which drops the wait on the container), records a
+	 * container gone without a recorded exit, and enforces `maxHours`.
+	 */
 	async alarm(): Promise<void> {
 		const run = (await this.runs())[0];
 		if (run?.state !== "running") return;
 		const container = this.ctx.container!;
+		if (container.running) {
+			await container.setInactivityTimeout(INACTIVITY_TIMEOUT_MS);
+			if (this.watching !== run.id) this.ctx.waitUntil(this.watch(run.id));
+		}
 		if (!container.running) {
 			await this.finish(run.id, "failed", "container stopped without a recorded exit");
 		} else if (Date.now() - Date.parse(run.startedAt) > PIPELINES[run.pipeline]!.maxHours * 3600_000) {
