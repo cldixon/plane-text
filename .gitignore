@@ -11,3 +11,4 @@ site/.astro/
 .wrangler/
 site/cloudflare/.cloudflare/
 .claude/worktrees/
+pipelines/cloudflare/.cloudflare/

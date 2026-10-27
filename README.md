@@ -68,6 +68,8 @@ Requirements beyond Python:
 
 Processed steps need none of these: they read raw parquet only.
 
+The AD pipeline also runs on Cloudflare: a Worker starts it in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
+
 ## Site
 
 The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `planetext.cldixon.dev`. Requires [Bun](https://bun.sh); Astro runs on the Bun runtime.
