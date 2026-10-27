@@ -2,9 +2,10 @@
 
 Caches every metadata page of a document type as gzipped JSON and, for types
 whose text lives in files, each document's main file, so pipelines re-parse
-without re-downloading. Needs DRS_API_KEY.
+without re-downloading. The cache sits at
+`<data_dir>/cache/drs/<doctype>/<snapshot>/{pages,files}/`. Needs DRS_API_KEY.
 
-    uv run python -m plane_text.drs SAIB AC          # cache metadata and files
+    uv run python -m plane_text.drs SAIB AC --snapshot 2026-10-24   # cache metadata and files
 """
 
 from __future__ import annotations
@@ -19,16 +20,27 @@ from typing import Any
 
 from faa_drs import PAGE_SIZE, Document, DRSClient
 
+from plane_text import storage
+
 SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+SOURCE = "drs"
 
 
 def cache_dir(data_dir: Path, doctype: str, snapshot: str) -> Path:
-    return data_dir / "raw" / "drs" / doctype / snapshot
+    """`<data_dir>/cache/drs/<doctype>/<snapshot>`."""
+    return storage.cache_dir(data_dir, SOURCE) / doctype / snapshot
 
 
-def fetch_pages(drs: DRSClient, doctype: str, cache: Path) -> list[dict[str, Any]]:
-    """Every document's metadata, newest change first, one cached file per page."""
-    records: list[dict[str, Any]] = []
+def page_files(cache: Path) -> list[Path]:
+    return sorted((cache / "pages").glob("page-*.json.gz"))
+
+
+def fetch_pages(drs: DRSClient, doctype: str, cache: Path) -> list[list[dict[str, Any]]]:
+    """Every document's metadata, newest change first, one cached file per page.
+
+    A cached page is reused, so an interrupted read resumes where it stopped.
+    """
+    pages: list[list[dict[str, Any]]] = []
     offset = 0
     while True:
         path = cache / "pages" / f"page-{offset:06d}.json.gz"
@@ -39,9 +51,10 @@ def fetch_pages(drs: DRSClient, doctype: str, cache: Path) -> list[dict[str, Any
             docs = [doc.model_dump(mode="json") for doc in page.documents]
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(gzip.compress(json.dumps(docs).encode()))
-        records.extend(docs)
+        pages.append(docs)
         if len(docs) < PAGE_SIZE:
-            return records
+            print(f"{doctype}: {offset + len(docs)} documents in {len(pages)} pages")
+            return pages
         offset += len(docs)
 
 
@@ -85,8 +98,7 @@ def main() -> None:
     with DRSClient() as drs:
         for doctype in args.doctypes:
             cache = cache_dir(args.data_dir, doctype, args.snapshot)
-            records = fetch_pages(drs, doctype, cache)
-            print(f"{doctype}: {len(records)} documents")
+            records = [r for page in fetch_pages(drs, doctype, cache) for r in page]
             if not args.no_files:
                 downloaded, failed = fetch_files(drs, records, cache)
                 print(f"{doctype}: {downloaded} files downloaded, {failed} failed")
