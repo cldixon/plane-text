@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import polars as pl
+import pytest
 
 from plane_text import ntsb_lookups as lookups
 
@@ -99,3 +102,125 @@ def test_code_sets_table_types():
     )
     sets = lookups.code_sets_table(raw)
     assert sets.row(0) == ("ct_acft_cat", "WSFT", "Weight-Shift", 3, None, False, True)
+
+
+def test_countries_table_keeps_each_databases_codes():
+    countries = lookups.countries_table(
+        {
+            "avall": pl.DataFrame(
+                {"COUNTRY_CODE": ["AU", "USA"], "COUNTRY_NAME": ["Australia", "United States"]}
+            ),
+            "Pre2008": pl.DataFrame(
+                {"COUNTRY_CODE": ["AU", " AS ", None], "COUNTRY_NAME": ["Austria", "Australia ", None]}
+            ),
+        }
+    )
+    assert countries.columns == ["database", "code", "name"]
+    assert countries.rows() == [
+        ("avall", "AU", "Australia"),
+        ("avall", "USA", "United States"),
+        ("Pre2008", "AU", "Austria"),
+        ("Pre2008", "AS", "Australia"),
+    ]
+
+
+# --- decoding ---------------------------------------------------------------
+
+
+def lookups_from(codes: list[tuple[str, str, str, str, str | None]]) -> lookups.Lookups:
+    """Lookups from (table, column, code, meaning, code_set) dictionary rows, via the real code table."""
+    entries = pl.DataFrame(
+        codes, schema=["table", "column", "code", "meaning", "code_set"], orient="row"
+    ).with_columns(
+        pl.lit(None, pl.String).alias(c) for c in ("detail", "category", "change_type", "change_notes")
+    )
+    code_sets = pl.DataFrame(
+        {
+            "code_set": ["ct_acft_cat", "ct_acft_cat"],
+            "code": ["AIR", "WSFT"],
+            "meaning": ["Plane", "Weight-Shift"],
+        }
+    )
+    countries = lookups.countries_table(
+        {
+            "avall": pl.DataFrame(
+                {"COUNTRY_CODE": ["AU", "USA"], "COUNTRY_NAME": ["Australia", "United States"]}
+            ),
+            "Pre2008": pl.DataFrame({"COUNTRY_CODE": ["AU", "AS"], "COUNTRY_NAME": ["Austria", "Australia"]}),
+        }
+    )
+    return lookups.Lookups(lookups.codes_table(entries), code_sets, countries)
+
+
+LOOKUPS = lookups_from(
+    [
+        ("aircraft", "acft_category", "AIR", "Airplane", "ct_acft_cat"),
+        ("aircraft", "far_part", "091", "Part 91: General Aviation", "ct_fars"),
+        ("aircraft", "far_part", "091", "Part 91 General Aviation", "ct_fars"),
+        ("Findings", "findings_code", "01022214XX", "Aircraft - Autopilot trim indicator", None),
+        ("Findings", "modifier_no", "xxxxxxxx01", "Failure", None),
+        ("Events_Sequence", "Occurrence_Code", "152xxx", "Standing-Engine(s) Start-up", None),
+        ("Events_Sequence", "Occurrence_Code", "xxx091", "Tailstrike", None),
+        ("Events_Sequence", "Occurrence_Code", "xxx152", "Not a phase", None),
+    ]
+)
+
+
+def test_labels_prefer_the_dictionary_then_its_code_set():
+    labels = LOOKUPS.labels(lookups.Label("c", "l", "aircraft", "acft_category"))
+    assert labels == {"AIR": "Airplane", "WSFT": "Weight-Shift"}  # the dictionary wins; ct_iaids fills gaps
+    far = LOOKUPS.labels(lookups.Label("c", "l", "aircraft", "far_part"))
+    assert far == {"091": "Part 91: General Aviation"}  # the first wording listed wins
+
+
+def test_composite_codes_decode_each_end():
+    frame = pl.DataFrame({"finding_code": ["0102221401", "0102221499"], "modifier_code": ["01", "99"]})
+    out = lookups.add_labels(
+        frame,
+        (
+            lookups.Label("finding_code", "finding", "Findings", "findings_code", "leading"),
+            lookups.Label("finding_code", "modifier", "Findings", "modifier_no", "trailing", "modifier_code"),
+        ),
+        LOOKUPS,
+    )
+    assert out.columns == ["finding_code", "finding", "modifier_code", "modifier"]
+    assert out["finding"].to_list() == ["Aircraft - Autopilot trim indicator"] * 2
+    assert out["modifier"].to_list() == ["Failure", None]  # 99 is not in the dictionary
+
+    events = pl.DataFrame({"occurrence_code": ["152091", "091152"]})
+    out = lookups.add_labels(
+        events,
+        (
+            lookups.Label("occurrence_code", "phase", "Events_Sequence", "Occurrence_Code", "leading"),
+            lookups.Label("occurrence_code", "event", "Events_Sequence", "Occurrence_Code", "trailing"),
+        ),
+        LOOKUPS,
+    )
+    # A phase is read only from the first three digits, an event only from the last three.
+    assert out.rows() == [
+        ("152091", "Standing-Engine(s) Start-up", "Tailstrike"),
+        ("091152", None, "Not a phase"),
+    ]
+
+
+def test_country_names_are_per_database():
+    assert LOOKUPS.country_names("avall") == {"AU": "Australia", "USA": "United States"}
+    assert LOOKUPS.country_names("Pre2008") == {"AU": "Austria", "AS": "Australia"}
+
+
+def test_place_after_and_coverage():
+    frame = pl.DataFrame({"a_code": ["X", "Y", None], "b": [1, 2, 3], "a": ["Ex", None, None]})
+    assert lookups.place_after(frame, {"a_code": ["a"]}).columns == ["a_code", "a", "b"]
+    coverage = lookups.coverage(frame, [("a_code", "a")])
+    row = coverage.row(0, named=True)
+    assert (row["coded"], row["labeled"], row["share"]) == (2, 1, 0.5)
+    assert lookups.coverage_json(coverage) == '{"a": [2, 1]}'
+
+
+def test_processed_dir_picks_the_latest_version_not_after_the_snapshot(tmp_path: Path):
+    root = tmp_path / "processed" / "ntsb-lookups"
+    for version in ("v2026-01-01", "v2026-10-23", "v2026-12-01"):
+        (root / version).mkdir(parents=True)
+    assert lookups.processed_dir(tmp_path, "2026-10-24") == root / "v2026-10-23"
+    with pytest.raises(FileNotFoundError):
+        lookups.processed_dir(tmp_path, "2025-01-01")
