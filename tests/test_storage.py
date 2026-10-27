@@ -25,3 +25,23 @@ def test_bucket_override(monkeypatch):
     assert storage.bucket() == "plane-text"
     monkeypatch.setenv("PLANETEXT_BUCKET", "other")
     assert storage.bucket() == "other"
+
+
+def test_layer_path_and_cache_dir(tmp_path: Path):
+    path = storage.layer_path(tmp_path, storage.RAW, "faa-sdrs", "2026-10-23", "service-difficulty-reports")
+    assert storage.object_key(path, tmp_path) == "raw/faa-sdrs/v2026-10-23/service-difficulty-reports.parquet"
+    assert storage.cache_dir(tmp_path, "faa-sdrs") == tmp_path / "cache" / "faa-sdrs"
+
+
+def test_derived_provenance_carries_the_source_forward(tmp_path: Path):
+    raw = storage.layer_path(tmp_path, storage.RAW, "faa-ads", "2026-10-23", "ad-final-rules")
+    storage.write_parquet(
+        pl.DataFrame({"a": [1]}), raw, {"dataset": "faa-ads", "layer": "raw", "snapshot": "x"}
+    )
+    provenance = storage.derived_provenance(raw, tmp_path, table="t")
+    assert provenance["dataset"] == "faa-ads"
+    assert provenance["snapshot"] == "x"
+    assert provenance["layer"] == "processed"
+    assert provenance["built_from"] == "raw/faa-ads/v2026-10-23/ad-final-rules.parquet"
+    assert provenance["table"] == "t"
+    assert "built_at" in provenance

@@ -1,12 +1,17 @@
 """Lookup tables for the coded columns in the FAA SDR dataset.
 
 Reads the FAA's SDRS Look-Up Tables (a zip of Excel sheets, the drop-down
-lists the reporting system uses) and the 2008 JASC code table PDF, and writes
-one small parquet per code set. The SDR table itself is left as published;
-joining codes to labels is a later step.
+lists the reporting system uses) and the 2008 JASC code table PDF.
 
-    uv run python -m plane_text.faa_sdrs_lookups            # write parquet
-    uv run python -m plane_text.faa_sdrs_lookups --upload   # ...and upload to R2
+- raw: one parquet per workbook in the zip, named after it (`HowDiscovered`,
+  `JASC`, ...), with the sheet's own headers and every cell as text, and the
+  JASC PDF's extracted text lines (`JASC_Code`), one row per line.
+- processed: one small, cleaned table per code set (`how_discovered`, `jasc`,
+  ...), built from raw. The processed SDR table takes its labels from these.
+
+    uv run python -m plane_text.faa_sdrs_lookups                 # raw, then processed
+    uv run python -m plane_text.faa_sdrs_lookups --step raw      # only raw (or processed)
+    uv run python -m plane_text.faa_sdrs_lookups --upload        # ...and upload to R2
 """
 
 from __future__ import annotations
@@ -17,7 +22,6 @@ import logging
 import re
 import zipfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -29,6 +33,7 @@ from plane_text import storage
 DATASET = "faa-sdrs-lookups"
 LOOKUP_ZIP = "https://sdrs.faa.gov/Documents/SDRS%20Look-Up%20Tables.zip"
 JASC_PDF = "https://sdrs.faa.gov/documents/JASC_Code.pdf"
+JASC_LINES = "JASC_Code"  # raw table of the PDF's text lines
 USER_AGENT = "plane-text (+https://github.com/cldixon/plane-text)"
 
 JASC_TITLE = re.compile(r"(\d{4}) ([A-Z0-9][A-Z0-9 ,/&()'.\-]*)")
@@ -38,7 +43,7 @@ SPACES = re.compile(r"\s+")
 
 @dataclass(frozen=True)
 class Sheet:
-    """One sheet in the zip: its file-name suffix, output table, and column names."""
+    """One workbook in the zip: its name (the raw table), processed table, and column names."""
 
     suffix: str
     table: str
@@ -62,6 +67,7 @@ SHEETS = (
     Sheet("Propeller", "propeller_make_model", ("make", "model")),
     Sheet("Component", "component_make_model", ("name", "model")),
 )
+JASC_SHEET = Sheet("JASC", "jasc", ("code", "description"))
 
 
 def clean(column: str) -> pl.Expr:
@@ -81,27 +87,55 @@ def fetch(http: httpx.Client, url: str, path: Path) -> bytes:
     return response.content
 
 
-# --- parsing ----------------------------------------------------------------
+# --- raw --------------------------------------------------------------------
 
 
-def find_sheet(archive: zipfile.ZipFile, suffix: str) -> zipfile.ZipInfo:
-    """The zip names sheets `<date>_<Name>.xlsx`; the date changes between releases."""
-    matches = [i for i in archive.infolist() if i.filename.endswith(f"_{suffix}.xlsx")]
-    if len(matches) != 1:
-        raise LookupError(f"expected one *_{suffix}.xlsx in the lookup zip, found {len(matches)}")
-    return matches[0]
+def sheet_name(filename: str) -> str:
+    """The zip names workbooks `<date>_<Name>.xlsx`; the date changes between releases."""
+    return filename.removesuffix(".xlsx").split("_", 1)[-1]
 
 
-def read_sheet(archive: zipfile.ZipFile, sheet: Sheet) -> tuple[pl.DataFrame, str]:
-    """A sheet as all-text columns, cleaned and deduplicated, with the sheet's date."""
-    info = find_sheet(archive, sheet.suffix)
-    frame = pl.read_excel(io.BytesIO(archive.read(info)), infer_schema_length=0)
+def read_workbooks(archive: zipfile.ZipFile) -> dict[str, tuple[pl.DataFrame, str]]:
+    """Every workbook in the zip as delivered: its sheet's headers, all cells as text.
+
+    Keyed by workbook name, with the zip member each came from.
+    """
+    workbooks = {}
+    for info in archive.infolist():
+        if not info.filename.endswith(".xlsx"):
+            continue
+        frame = pl.read_excel(io.BytesIO(archive.read(info)), infer_schema_length=0)
+        workbooks[sheet_name(info.filename)] = (frame, info.filename)
+    return workbooks
+
+
+def require_workbooks(names: set[str]) -> None:
+    """Fail early when a release drops or renames a workbook the processed tables need."""
+    if missing := {sheet.suffix for sheet in (*SHEETS, JASC_SHEET)} - names:
+        raise LookupError(f"the lookup zip has no workbook for {sorted(missing)}")
+
+
+def pdf_lines(pdf: bytes) -> pl.DataFrame:
+    """The PDF's extracted text, one row per line, numbered from 1 within each page."""
+    logging.getLogger("pypdf").setLevel(logging.ERROR)  # font warnings are noise here
+    rows = [
+        (page_number, line_number, line)
+        for page_number, page in enumerate(PdfReader(io.BytesIO(pdf)).pages, start=1)
+        for line_number, line in enumerate(page.extract_text().splitlines(), start=1)
+    ]
+    return pl.DataFrame(rows, schema={"page": pl.Int16, "line": pl.Int32, "text": pl.String}, orient="row")
+
+
+# --- processed --------------------------------------------------------------
+
+
+def tidy(frame: pl.DataFrame, sheet: Sheet) -> pl.DataFrame:
+    """A raw sheet renamed to `sheet.columns`, whitespace collapsed, empty and duplicate rows dropped."""
     if frame.width != len(sheet.columns):
-        raise ValueError(f"{info.filename}: expected {len(sheet.columns)} columns, got {frame.columns}")
+        raise ValueError(f"{sheet.suffix}: expected {len(sheet.columns)} columns, got {frame.columns}")
     frame = frame.rename(dict(zip(frame.columns, sheet.columns, strict=True)))
     frame = frame.with_columns(clean(c) for c in sheet.columns)
-    frame = frame.filter(pl.col(sheet.columns[0]).is_not_null()).unique(maintain_order=True)
-    return frame, info.filename.split("_", 1)[0]
+    return frame.filter(pl.col(sheet.columns[0]).is_not_null()).unique(maintain_order=True)
 
 
 def parse_jasc_lines(lines: list[str]) -> tuple[dict[str, str], dict[str, str]]:
@@ -119,12 +153,6 @@ def parse_jasc_lines(lines: list[str]) -> tuple[dict[str, str], dict[str, str]]:
         elif m := JASC_CHAPTER.fullmatch(line):
             chapters.setdefault(m.group(1), SPACES.sub(" ", m.group(2)).strip())
     return titles, chapters
-
-
-def parse_jasc_pdf(pdf: bytes) -> tuple[dict[str, str], dict[str, str]]:
-    logging.getLogger("pypdf").setLevel(logging.ERROR)  # font warnings are noise here
-    pages = PdfReader(io.BytesIO(pdf)).pages
-    return parse_jasc_lines([line for page in pages for line in page.extract_text().splitlines()])
 
 
 def jasc_table(sheet: pl.DataFrame, titles: dict[str, str], chapters: dict[str, str]) -> pl.DataFrame:
@@ -150,54 +178,90 @@ def jasc_table(sheet: pl.DataFrame, titles: dict[str, str], chapters: dict[str, 
 # --- pipeline ---------------------------------------------------------------
 
 
-def run(data_dir: Path, upload: bool) -> list[Path]:
-    snapshot = datetime.now(UTC).date().isoformat()
-    cache = data_dir / "raw" / DATASET / snapshot
+def build_raw(data_dir: Path, snapshot: str) -> list[Path]:
+    """Download (or reuse the cached) zip and PDF and write each as delivered to raw."""
+    cache = storage.cache_dir(data_dir, DATASET) / snapshot
+    zip_path, pdf_path = cache / "lookup-tables.zip", cache / "JASC_Code.pdf"
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=120, follow_redirects=True) as http:
-        archive = zipfile.ZipFile(io.BytesIO(fetch(http, LOOKUP_ZIP, cache / "lookup-tables.zip")))
-        pdf = fetch(http, JASC_PDF, cache / "JASC_Code.pdf")
+        archive = zipfile.ZipFile(io.BytesIO(fetch(http, LOOKUP_ZIP, zip_path)))
+        pdf = fetch(http, JASC_PDF, pdf_path)
 
-    tables: dict[str, tuple[pl.DataFrame, str, str]] = {}
-    for sheet in SHEETS:
-        frame, sheet_date = read_sheet(archive, sheet)
-        tables[sheet.table] = (frame, LOOKUP_ZIP, sheet_date)
-    jasc_sheet, sheet_date = read_sheet(archive, Sheet("JASC", "jasc", ("code", "description")))
-    titles, chapters = parse_jasc_pdf(pdf)
-    tables["jasc"] = (jasc_table(jasc_sheet, titles, chapters), f"{LOOKUP_ZIP} and {JASC_PDF}", sheet_date)
+    workbooks = read_workbooks(archive)
+    require_workbooks(set(workbooks))
+    tables = {
+        name: (frame, LOOKUP_ZIP, member, member.split("_", 1)[0], storage.modified_at(zip_path))
+        for name, (frame, member) in workbooks.items()
+    }
+    tables[JASC_LINES] = (pdf_lines(pdf), JASC_PDF, pdf_path.name, "2008", storage.modified_at(pdf_path))
 
-    out = data_dir / DATASET / f"v{snapshot}"
     paths = []
-    retrieved_at = datetime.now(UTC).isoformat(timespec="seconds")
-    for table, (frame, source_url, sheet_date) in tables.items():
-        path = out / f"{table}.parquet"
+    for name, (frame, source_url, source_file, source_date, retrieved_at) in tables.items():
+        path = storage.layer_path(data_dir, storage.RAW, DATASET, snapshot, name)
         storage.write_parquet(
             frame,
             path,
             provenance={
                 "dataset": DATASET,
-                "table": table,
+                "layer": storage.RAW,
+                "table": name,
                 "source": "FAA SDRS Look-Up Tables",
                 "source_url": source_url,
-                "source_date": sheet_date,
+                "source_file": source_file,
+                "source_date": source_date,
                 "snapshot": snapshot,
                 "retrieved_at": retrieved_at,
             },
         )
-        print(f"{table}: {frame.height} rows")
+        print(f"raw {name}: {frame.height} rows")
         paths.append(path)
-        if upload:
-            storage.upload(path, data_dir)
+    return paths
+
+
+def build_processed(data_dir: Path, snapshot: str) -> list[Path]:
+    """Clean each raw sheet into its code table, and combine the JASC sheet and PDF into `jasc`."""
+
+    def raw(name: str) -> Path:
+        return storage.layer_path(data_dir, storage.RAW, DATASET, snapshot, name)
+
+    tables: dict[str, tuple[pl.DataFrame, Path, dict[str, str]]] = {}
+    for sheet in SHEETS:
+        tables[sheet.table] = (tidy(pl.read_parquet(raw(sheet.suffix)), sheet), raw(sheet.suffix), {})
+    lines = pl.read_parquet(raw(JASC_LINES))["text"].to_list()
+    titles, chapters = parse_jasc_lines(lines)
+    jasc = jasc_table(tidy(pl.read_parquet(raw(JASC_SHEET.suffix)), JASC_SHEET), titles, chapters)
+    pdf_key = storage.object_key(raw(JASC_LINES), data_dir)
+    tables["jasc"] = (
+        jasc,
+        raw(JASC_SHEET.suffix),
+        {"source_url": f"{LOOKUP_ZIP} and {JASC_PDF}", "also_built_from": pdf_key},
+    )
+
+    paths = []
+    for table, (frame, source, extra) in tables.items():
+        path = storage.layer_path(data_dir, storage.PROCESSED, DATASET, snapshot, table)
+        storage.write_parquet(frame, path, storage.derived_provenance(source, data_dir, table=table, **extra))
+        print(f"processed {table}: {frame.height} rows")
+        paths.append(path)
+    return paths
+
+
+def run(data_dir: Path, snapshot: str, steps: list[str], upload: bool) -> list[Path]:
+    paths = []
+    if storage.RAW in steps:
+        paths += build_raw(data_dir, snapshot)
+    if storage.PROCESSED in steps:
+        paths += build_processed(data_dir, snapshot)
     if upload:
-        print(f"uploaded {len(paths)} tables to r2://{storage.bucket()}/{DATASET}/v{snapshot}/")
+        for path in paths:
+            storage.upload(path, data_dir)
+        print(f"uploaded {len(paths)} tables to r2://{storage.bucket()}/")
     return paths
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data-dir", type=Path, default=Path("data"))
-    parser.add_argument("--upload", action="store_true", help="upload the parquet files to R2")
-    args = parser.parse_args()
-    run(args.data_dir, args.upload)
+    args = storage.parse_args(parser)
+    run(args.data_dir, args.snapshot, args.steps, args.upload)
 
 
 if __name__ == "__main__":

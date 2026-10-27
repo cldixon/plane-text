@@ -7,6 +7,9 @@
   /* Color */
   --color-background: #fff;
   --color-text: #000;
+  --color-text-muted: #555;
+  --color-border: #ccc;
+  --color-error: #b00020;
 
   /* Typography */
   --font-family-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -32,5 +35,13 @@
 
   /* Layout */
   --measure: 40rem;
+  --measure-wide: 80rem;
   --gutter: var(--space-3);
+
+  /* Borders */
+  --border-width: 1px;
+  --border: var(--border-width) solid var(--color-border);
+
+  /* Data tables: the widest a cell grows before its text is cut off. */
+  --cell-max-width: 20rem;
 }

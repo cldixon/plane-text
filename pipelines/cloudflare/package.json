@@ -1,0 +1,15 @@
+{
+  "name": "plane-text-pipelines",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "cf": "1.0.0-beta.21",
+    "typescript": "6.0.3",
+    "wrangler": "4.152.0"
+  },
+  "scripts": {
+    "check": "cf workers types && tsc -p .",
+    "dev": "cf dev",
+    "deploy": "cf deploy"
+  }
+}
