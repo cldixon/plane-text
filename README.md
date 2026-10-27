@@ -69,7 +69,7 @@ Requirements beyond Python:
 
 Processed steps need none of these: they read raw parquet only.
 
-The AD, SAIB, AC and maintenance alert pipelines also run on Cloudflare: a Worker starts each in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
+Every pipeline but the advisory circulars also runs on Cloudflare: a Worker starts it in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
 
 ## Site
 

@@ -2,16 +2,23 @@
 
 Runs the `plane_text` pipelines in a [Cloudflare Container](https://developers.cloudflare.com/containers/), which writes the raw and processed parquet straight to R2 with the same `--upload` path as a local run.
 
-| Pipeline | Command | Instance | Time limit |
+| Pipeline | Steps, in one container | Instance | Time limit |
 | --- | --- | --- | --- |
-| `faa-ads` | `plane_text.faa_ads` | `standard-1` (½ vCPU, 4 GiB) | 1 h |
-| `faa-saibs` | `plane_text.faa_guidance SAIB --workers 4` | `standard-4` (4 vCPU, 12 GiB, 20 GB disk) | 2 h |
-| `faa-maintenance-alerts` | `plane_text.faa_guidance ALERTS --workers 4` | `standard-4` | 2 h |
-| `faa-advisory-circulars` | `plane_text.faa_guidance AC --workers 4` | `standard-4` | 8 h |
+| `ecfr-title14` | `ecfr` | `standard-1` (½ vCPU, 4 GiB) | 1 h |
+| `faa-ads` | `faa_ads` | `standard-1` | 1 h |
+| `faa-proposed-rules` | `faa_proposed_rules` | `standard-1` | 2 h |
+| `faa-sdrs` | `faa_sdrs_lookups`, then `faa_sdrs` | `standard-4` (4 vCPU, 12 GiB, 20 GB disk); decoding peaks near 8 GiB | 1 h |
+| `ntsb` | `ntsb_lookups`, then `ntsb`, then `ntsb_findings` | `standard-3` (2 vCPU, 8 GiB) | 1 h |
+| `faa-saibs` | `faa_guidance SAIB --workers 4` | `standard-4` | 1 h |
+| `faa-maintenance-alerts` | `faa_guidance ALERTS --workers 4` | `standard-4` | 1 h |
+
+Each step is `python -m plane_text.<step> --upload --snapshot <date>`, all with the same date (the request's `snapshot`, or today in UTC), stopping at the first step that fails. Steps share the container's disk, so a later step reads what an earlier one built: processed SDRs and NTSB tables decode their codes with the lookups built just before them.
+
+Advisory circulars are not run here: every run would re-download 2.5 GB of PDFs and OCR about 7,000 scanned pages, hours of work that is almost all repeated. They need extraction state that outlives the container first.
 
 The PDF pipelines download every PDF and OCR every scanned page on each run (nothing is cached between runs yet), one Tesseract per vCPU.
 
-- `Dockerfile`: Ubuntu 24.04 with poppler-utils and Tesseract (English), uv, the Python 3.13 that uv installs, the locked dependencies and `src/`. Built from the repository root (`.dockerignore` there keeps the context to `pyproject.toml`, `uv.lock`, `.python-version`, `README.md` and `src/`).
+- `Dockerfile`: Ubuntu 24.04 with poppler-utils, Tesseract (English) and mdbtools, uv, the Python 3.13 that uv installs, the locked dependencies and `src/`. Built from the repository root (`.dockerignore` there keeps the context to `pyproject.toml`, `uv.lock`, `.python-version`, `README.md` and `src/`).
 - `cloudflare.config.ts`: the Worker `plane-text-pipelines`, the Container image, the `PipelineRun` Durable Object that owns the container, and the secrets.
 - `src/index.ts`: the run endpoints and `PipelineRun`. One Durable Object per pipeline, so a pipeline runs at most once at a time. It starts the container (internet on) on the pipeline's instance type with the pipeline's command as entrypoint, records the run, and marks it succeeded or failed when the container exits. Every minute an alarm renews the container's inactivity timeout, re-attaches the wait on the container if the object restarted (after a deploy, say), records a container that vanished without an exit, and stops a run that passes its time limit.
 
@@ -28,7 +35,7 @@ curl -X DELETE -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipeline
 
 `POST` answers 202 with the new run, or 409 with the current one if the pipeline is already running. `DELETE` records the current run as cancelled and destroys its container. Right after a deploy, a Durable Object still running the previous code can answer 500 until it restarts; retry. Container output (the pipeline's own log) is in the Worker's observability logs.
 
-To add a pipeline, add it to `PIPELINES` in `src/index.ts`, and any secret it needs to the config and to the container's `env`. A pipeline needing other system tools (mdbtools for NTSB) needs them in the `Dockerfile`.
+To add a pipeline, add it to `PIPELINES` in `src/index.ts`, and any secret it needs to the config and to the container's `env`. A pipeline needing other system tools needs them in the `Dockerfile`.
 
 ## Deploying
 

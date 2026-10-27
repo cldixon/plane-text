@@ -16,7 +16,8 @@ WORKDIR /app
 # only (apt then uses HTTPS, as such proxies refuse plain HTTP); it is never
 # written into the image.
 
-# PDF text (pdftotext, pdftoppm) and OCR, for the SAIB, AC and maintenance alert pipelines.
+# PDF text (pdftotext, pdftoppm) and OCR for the SAIB, AC and maintenance alert
+# pipelines; mdbtools (mdb-export) for the NTSB Access databases.
 # (mode 0444: apt downloads as the unprivileged _apt user.)
 RUN --mount=type=secret,id=ca,required=false,mode=0444 \
     opt=""; \
@@ -25,7 +26,7 @@ RUN --mount=type=secret,id=ca,required=false,mode=0444 \
         opt="-o Acquire::https::CAInfo=/run/secrets/ca"; \
     fi; \
     apt-get $opt update \
-    && apt-get $opt install -y --no-install-recommends ca-certificates curl poppler-utils tesseract-ocr \
+    && apt-get $opt install -y --no-install-recommends ca-certificates curl poppler-utils tesseract-ocr mdbtools \
     && rm -rf /var/lib/apt/lists/*
 
 # uv, which also installs the Python the lockfile asks for (3.13).

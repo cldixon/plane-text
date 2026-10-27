@@ -1,7 +1,8 @@
 /**
  * Runs plane_text pipelines in a Cloudflare Container, which writes to R2.
  *
- *   POST /runs/<pipeline>[?snapshot=YYYY-MM-DD]   start a run (202), or 409 if one is running
+ *   POST /runs/<pipeline>[?snapshot=YYYY-MM-DD]   start a run (202), or 409 if one is running;
+ *                                                 the snapshot defaults to today (UTC)
  *   GET  /runs/<pipeline>                         the latest runs, newest first
  *   DELETE /runs/<pipeline>                       stop the current run (its container is destroyed)
  *
@@ -15,32 +16,66 @@
 
 import { DurableObject } from "cloudflare:workers";
 
-type Pipeline = {
-	/** Run as `python -m plane_text.<module> <args> --upload [--snapshot <date>]`. */
+type Step = {
+	/** Run as `python -m plane_text.<module> <args> --upload --snapshot <date>`. */
 	module: string;
 	args?: string[];
+};
+
+type Pipeline = {
+	/** Run in order in one container; a later step may read what an earlier one built. */
+	steps: Step[];
 	instance: "standard-1" | "standard-2" | "standard-3" | "standard-4";
 	/** A run still going after this long is stopped and recorded as failed. */
 	maxHours: number;
 };
 
-/** Pipelines that can be started, by URL name. PDF pipelines OCR with one Tesseract per vCPU. */
+/**
+ * Pipelines that can be started, by URL name. PDF pipelines OCR with one Tesseract
+ * per vCPU. Advisory circulars are left out: re-reading 2.5 GB of PDFs and OCRing
+ * ~7,000 scanned pages on every run needs state that outlives the container.
+ */
 const PIPELINES: Record<string, Pipeline> = {
-	"faa-ads": { module: "faa_ads", instance: "standard-1", maxHours: 1 },
-	"faa-saibs": { module: "faa_guidance", args: ["SAIB", "--workers", "4"], instance: "standard-4", maxHours: 2 },
-	"faa-maintenance-alerts": {
-		module: "faa_guidance",
-		args: ["ALERTS", "--workers", "4"],
+	"ecfr-title14": { steps: [{ module: "ecfr" }], instance: "standard-1", maxHours: 1 },
+	"faa-ads": { steps: [{ module: "faa_ads" }], instance: "standard-1", maxHours: 1 },
+	"faa-proposed-rules": { steps: [{ module: "faa_proposed_rules" }], instance: "standard-1", maxHours: 2 },
+	// Processed SDRs decode codes with the processed lookups, so the lookups are built first.
+	// Decoding 1.77 million reports peaks near 8 GiB, too close to standard-3's limit.
+	"faa-sdrs": {
+		steps: [{ module: "faa_sdrs_lookups" }, { module: "faa_sdrs" }],
 		instance: "standard-4",
-		maxHours: 2,
+		maxHours: 1,
 	},
-	"faa-advisory-circulars": {
-		module: "faa_guidance",
-		args: ["AC", "--workers", "4"],
+	// The three NTSB datasets share one download; narratives and findings decode with the lookups.
+	ntsb: {
+		steps: [{ module: "ntsb_lookups" }, { module: "ntsb" }, { module: "ntsb_findings" }],
+		instance: "standard-3",
+		maxHours: 1,
+	},
+	"faa-saibs": {
+		steps: [{ module: "faa_guidance", args: ["SAIB", "--workers", "4"] }],
 		instance: "standard-4",
-		maxHours: 8,
+		maxHours: 1,
+	},
+	"faa-maintenance-alerts": {
+		steps: [{ module: "faa_guidance", args: ["ALERTS", "--workers", "4"] }],
+		instance: "standard-4",
+		maxHours: 1,
 	},
 };
+
+/**
+ * The container's command: each step in turn, stopping at the first that fails.
+ * Every step gets the same snapshot, so a run that crosses midnight UTC stays one version.
+ */
+function command(pipeline: Pipeline, snapshot: string): string[] {
+	const steps = pipeline.steps.map((step) =>
+		["python", "-m", `plane_text.${step.module}`, ...(step.args ?? []), "--upload", "--snapshot", snapshot].join(
+			" ",
+		),
+	);
+	return steps.length === 1 ? steps[0]!.split(" ") : ["sh", "-c", `set -e; ${steps.join("; ")}`];
+}
 
 const CHECK_EVERY_MS = 60 * 1000;
 /**
@@ -57,7 +92,7 @@ type Run = {
 	pipeline: string;
 	command: string[];
 	instance: string;
-	snapshot: string | null;
+	snapshot: string;
 	state: "running" | "succeeded" | "failed" | "cancelled";
 	startedAt: string;
 	finishedAt?: string;
@@ -74,14 +109,13 @@ export class PipelineRun extends DurableObject<Env> {
 		if (runs[0]?.state === "running" && container.running) return { started: false, run: runs[0] };
 
 		const spec = PIPELINES[pipeline]!;
-		const command = ["python", "-m", `plane_text.${spec.module}`, ...(spec.args ?? []), "--upload"];
-		if (snapshot) command.push("--snapshot", snapshot);
+		const date = snapshot ?? new Date().toISOString().slice(0, 10);
 		const run: Run = {
 			id: crypto.randomUUID(),
 			pipeline,
-			command,
+			command: command(spec, date),
 			instance: spec.instance,
-			snapshot,
+			snapshot: date,
 			state: "running",
 			startedAt: new Date().toISOString(),
 		};
@@ -89,7 +123,7 @@ export class PipelineRun extends DurableObject<Env> {
 			image: container.images.pipelines,
 			instance: spec.instance,
 			enableInternet: true,
-			entrypoint: command,
+			entrypoint: run.command,
 			env: {
 				DRS_API_KEY: this.env.DRS_API_KEY,
 				S3_API_ENDPOINT: this.env.S3_API_ENDPOINT,
