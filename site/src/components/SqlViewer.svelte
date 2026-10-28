@@ -13,11 +13,13 @@
     src: string;
     /** Name of the view the file is exposed as. */
     view: string;
-    /** The query the editor starts with. */
+    /** The query the editor starts with; it runs as soon as DuckDB is ready. */
     initialQuery: string;
+    /** Queries offered as buttons above the editor; picking one runs it. */
+    examples?: { label: string; query: string }[];
   }
 
-  let { src, view, initialQuery }: Props = $props();
+  let { src, view, initialQuery, examples = [] }: Props = $props();
 
   /** Rows kept for display; the rest are counted, not stored. */
   const MAX_ROWS = 100;
@@ -80,6 +82,12 @@
     conn = await db.connect();
     await conn.query(`CREATE VIEW ${view} AS SELECT * FROM read_parquet('${fileName}')`);
     status = "ready";
+    await run();
+  }
+
+  function pick(example: string): void {
+    query = example;
+    void run();
   }
 
   async function run(): Promise<void> {
@@ -151,6 +159,15 @@
 </script>
 
 <div class="viewer">
+  {#if examples.length > 0}
+    <div class="bar">
+      <span class="muted">Try:</span>
+      {#each examples as example}
+        <button type="button" onclick={() => pick(example.query)} disabled={status !== "ready"}>{example.label}</button>
+      {/each}
+    </div>
+  {/if}
+
   <label for="sql">SQL</label>
   <textarea
     id="sql"
@@ -215,8 +232,9 @@
 
   .bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2) var(--space-3);
   }
 
   .muted,
@@ -233,7 +251,8 @@
   }
 
   .scroll {
-    overflow-x: auto;
+    max-height: var(--results-max-height);
+    overflow: auto;
     border: var(--border);
   }
 
@@ -255,6 +274,9 @@
   }
 
   th {
+    position: sticky;
+    top: 0;
+    background: var(--color-background);
     font-family: var(--font-family-mono);
   }
 </style>

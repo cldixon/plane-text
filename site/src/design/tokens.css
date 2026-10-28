@@ -42,6 +42,8 @@
   --border-width: 1px;
   --border: var(--border-width) solid var(--color-border);
 
-  /* Data tables: the widest a cell grows before its text is cut off. */
+  /* Data tables: the widest a cell grows before its text is cut off, and the
+     tallest a result grows before it scrolls. */
   --cell-max-width: 20rem;
+  --results-max-height: 28rem;
 }
