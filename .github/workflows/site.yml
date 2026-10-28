@@ -83,7 +83,9 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          npx cf workers versions create --preview-alias "pr-$PR_NUMBER" --message "PR #$PR_NUMBER at ${HEAD_SHA::7}" | tee upload.log
+          set -o pipefail
+          # cf reports on stderr.
+          npx cf workers versions create --preview-alias "pr-$PR_NUMBER" --message "PR #$PR_NUMBER at ${HEAD_SHA::7}" 2>&1 | tee upload.log
           url=$(sed -n 's/.*Version Preview Alias URL: *\(https:[^ ]*\).*/\1/p' upload.log | head -1)
           if [ -z "$url" ]; then
             echo "::error::No preview URL in the cf output."
