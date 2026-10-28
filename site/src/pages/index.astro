@@ -137,8 +137,17 @@ LIMIT 100`,
 </BaseLayout>
 
 <style>
+  /* Text blocks sit in a centered column; headings, header and footer are
+     centered too, while paragraphs stay left-aligned for reading. */
   .prose {
     max-width: var(--measure);
+    margin-inline: auto;
+  }
+
+  header,
+  h2,
+  footer {
+    text-align: center;
   }
 
   section,

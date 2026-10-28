@@ -1,5 +1,6 @@
 /*
- * Element defaults, built only from tokens. Links are left to the browser.
+ * Element defaults, built only from tokens. Links are left to the browser
+ * (drawn for a dark page through color-scheme).
  */
 
 *,
@@ -9,6 +10,7 @@
 }
 
 html {
+  color-scheme: var(--color-scheme);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }

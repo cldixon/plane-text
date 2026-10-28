@@ -226,6 +226,8 @@
     padding: var(--space-2);
     font-family: var(--font-family-mono);
     font-size: var(--font-size-sm);
+    color: var(--color-text);
+    background: var(--color-background);
     border: var(--border);
     resize: vertical;
   }
