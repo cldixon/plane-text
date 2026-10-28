@@ -1,9 +1,180 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
-import { site } from "../site";
+import SqlViewer from "@components/SqlViewer.svelte";
+import { datasets, links, site } from "../site";
+
+/** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
+const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
+
+const initialQuery = `SELECT ad_number, effective_date, status, make, subject
+FROM ads
+ORDER BY effective_date DESC
+LIMIT 100`;
+
+const examples = [
+  { label: "Latest ADs", query: initialQuery },
+  {
+    label: "ADs per year",
+    query: `SELECT year(effective_date) AS year, count(*) AS ads
+FROM ads
+WHERE effective_date IS NOT NULL
+GROUP BY year
+ORDER BY year DESC`,
+  },
+  {
+    label: "Most-cited manufacturers",
+    query: `SELECT manufacturer, count(*) AS ads
+FROM (SELECT unnest(make) AS manufacturer FROM ads)
+GROUP BY manufacturer
+ORDER BY ads DESC
+LIMIT 25`,
+  },
+  {
+    label: "Search subjects",
+    query: `SELECT ad_number, effective_date, make, subject
+FROM ads
+WHERE subject ILIKE '%landing gear%'
+ORDER BY effective_date DESC
+LIMIT 100`,
+  },
+  { label: "Columns", query: "DESCRIBE ads" },
+];
 ---
 
 <BaseLayout>
-  <h1>{site.title}</h1>
-  <p>{site.description}</p>
+  <header class="prose">
+    <h1>{site.title}</h1>
+    <p class="lede">An open corpus of aviation maintenance text, built only from public sources.</p>
+    <nav aria-label="Project links">
+      {links.map((link, i) => (
+        <>
+          {i > 0 && " · "}
+          <a href={link.href}>{link.label}</a>
+        </>
+      ))}
+    </nav>
+  </header>
+
+  <section class="prose" aria-labelledby="overview">
+    <h2 id="overview">Overview</h2>
+    <p>
+      Aircraft maintenance runs on text: the regulations that govern it, the airworthiness directives that order
+      inspections and repairs, the bulletins and advisory circulars that explain them, and the reports mechanics and
+      investigators write when something goes wrong. Airlines hold large internal collections of this kind of text, but
+      little of it is available for open research.
+    </p>
+    <p>
+      Plane-text gathers the public side of it from the FAA, the eCFR and the NTSB, cleans it, and publishes it as
+      versioned datasets: the same kinds of documents a maintenance organization works with, ready for search,
+      analysis and language models.
+    </p>
+  </section>
+
+  <section class="prose" aria-labelledby="explore">
+    <h2 id="explore">Explore</h2>
+    <p>
+      Query the FAA airworthiness directives with SQL, right here. The query runs in your browser with <a
+        href="https://duckdb.org/docs/api/wasm/overview">DuckDB-WASM</a>, which reads only the parts of the parquet
+      file it needs. The table is <code>ads</code>, one row per directive.
+    </p>
+    <SqlViewer client:only="svelte" {src} view="ads" {initialQuery} {examples} />
+  </section>
+
+  <section class="prose" aria-labelledby="datasets">
+    <h2 id="datasets">Datasets</h2>
+    <p>Each dataset is published as dated snapshots of parquet files.</p>
+    <dl>
+      {
+        datasets.map((dataset) => (
+          <>
+            <dt>
+              {dataset.title} <code>{dataset.name}</code>
+            </dt>
+            <dd>
+              {dataset.size}. Source: {dataset.source}.{dataset.note && ` ${dataset.note}`}
+            </dd>
+          </>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="prose" aria-labelledby="how">
+    <h2 id="how">How it is built</h2>
+    <p>
+      Every dataset comes in two layers. <strong>Raw</strong> is the source as delivered, converted to parquet with its
+      own field names and nothing changed. <strong>Processed</strong> is built only from raw: cleaned, typed, one row
+      per document or report, with coded fields decoded into readable labels next to their codes. Each file records
+      where it came from and when.
+    </p>
+    <p>
+      The pipelines are Python, and they run on Cloudflare: each run starts a container that fetches its source and
+      writes both layers to storage. The code is on <a href="https://github.com/cldixon/plane-text">GitHub</a>.
+    </p>
+  </section>
+
+  <section class="prose" aria-labelledby="status">
+    <h2 id="status">Status</h2>
+    <p>
+      Early and changing. The datasets above are built and stored; for now you can query the airworthiness
+      directives here. Downloads, scheduled updates, more sources (EASA, NASA ASRS and Transport Canada among them)
+      and a data license are next. All sources are US government works or other public records.
+    </p>
+  </section>
+
+  <footer class="prose">
+    <nav aria-label="Project links">
+      {links.map((link, i) => (
+        <>
+          {i > 0 && " · "}
+          <a href={link.href}>{link.label}</a>
+        </>
+      ))}
+    </nav>
+  </footer>
 </BaseLayout>
+
+<style>
+  /* Text blocks sit in a centered column; headings, header and footer are
+     centered too, while paragraphs stay left-aligned for reading. */
+  .prose {
+    max-width: var(--measure);
+    margin-inline: auto;
+  }
+
+  header,
+  h2,
+  footer {
+    text-align: center;
+  }
+
+  section,
+  footer {
+    margin-top: var(--space-5);
+  }
+
+  .lede {
+    font-size: var(--font-size-lg);
+  }
+
+  dt {
+    margin-top: var(--space-3);
+    font-weight: var(--font-weight-bold);
+  }
+
+  dt code {
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  footer {
+    color: var(--color-text-muted);
+    border-top: var(--border);
+    padding-top: var(--space-3);
+  }
+</style>

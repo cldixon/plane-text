@@ -1,5 +1,6 @@
 /*
- * Element defaults, built only from tokens. Links are left to the browser.
+ * Element defaults, built only from tokens. Links keep the browser's
+ * underline, in a plain blue that reads on black.
  */
 
 *,
@@ -9,6 +10,7 @@
 }
 
 html {
+  color-scheme: var(--color-scheme);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -35,4 +37,9 @@ h1 {
 code,
 pre {
   font-family: var(--font-family-mono);
+}
+
+a,
+a:visited {
+  color: var(--color-link);
 }
