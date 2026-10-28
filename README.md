@@ -73,7 +73,7 @@ Every pipeline but the advisory circulars also runs on Cloudflare: a Worker star
 
 ## Site
 
-The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `planetext.cldixon.dev`. Requires [Bun](https://bun.sh); Astro runs on the Bun runtime.
+The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `plane-text.cldixon.dev` (the old `planetext.cldixon.dev` redirects there). Requires [Bun](https://bun.sh); Astro runs on the Bun runtime.
 
 ```sh
 cd site
