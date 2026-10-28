@@ -1,14 +1,20 @@
 /**
- * Serves allowlisted dataset files from the private R2 bucket at /data/<key>.
+ * The site's Worker. Every request reaches it first (`runWorkerFirst` in
+ * cloudflare.config.ts):
  *
- * Only /data/* reaches this Worker (see `runWorkerFirst` in cloudflare.config.ts);
- * everything else is a static asset. DuckDB-WASM reads parquet with HTTP Range
- * requests, so this supports HEAD, single byte ranges (206 + Content-Range) and
- * ETag / Last-Modified validators.
+ * - the old hostname, planetext.cldixon.dev, redirects (301) to the same path
+ *   on plane-text.cldixon.dev;
+ * - /data/<key> serves an allowlisted dataset file from the private R2 bucket.
+ *   DuckDB-WASM reads parquet with HTTP Range requests, so this supports HEAD,
+ *   single byte ranges (206 + Content-Range) and ETag / Last-Modified validators;
+ * - everything else is a static asset.
  *
- * `Env` (the R2 binding `DATA`) is generated from cloudflare.config.ts by
- * `cf workers types` into .cloudflare/types/.
+ * `Env` (the `ASSETS` and R2 `DATA` bindings) is generated from cloudflare.config.ts
+ * by `cf workers types` into .cloudflare/types/.
  */
+
+const HOST = "plane-text.cldixon.dev";
+const OLD_HOST = "planetext.cldixon.dev";
 
 /** R2 object keys exposed to the browser. Nothing else in the bucket is reachable. */
 const EXPOSED_KEYS = new Set<string>(["processed/faa-ads/v2026-10-23/ad-final-rules.parquet"]);
@@ -58,9 +64,14 @@ function baseHeaders(object: R2Object): Headers {
 export default {
 	async fetch(request, env): Promise<Response> {
 		const url = new URL(request.url);
-		const key = decodeURIComponent(url.pathname.slice(PREFIX.length));
+		if (url.hostname === OLD_HOST) {
+			url.hostname = HOST;
+			return Response.redirect(url.toString(), 301);
+		}
+		if (!url.pathname.startsWith(PREFIX)) return env.ASSETS.fetch(request);
 
-		if (!url.pathname.startsWith(PREFIX) || !EXPOSED_KEYS.has(key)) {
+		const key = decodeURIComponent(url.pathname.slice(PREFIX.length));
+		if (!EXPOSED_KEYS.has(key)) {
 			return new Response("Not found\n", { status: 404 });
 		}
 		if (request.method !== "GET" && request.method !== "HEAD") {

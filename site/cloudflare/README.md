@@ -1,8 +1,8 @@
 # Deploy
 
-The `cf` project that deploys the built site (`../dist`) on Cloudflare Workers: static assets, plus a small Worker for `/data/*`.
+The `cf` project that deploys the built site (`../dist`) on Cloudflare Workers: static assets behind a small Worker.
 
-- `cloudflare.config.ts`: the Worker (name, compatibility date, entrypoint, R2 binding, 404 handling, custom domain). Only `/data/*` runs the Worker first; every other path is a static asset.
+- `cloudflare.config.ts`: the Worker (name, compatibility date, entrypoint, assets and R2 bindings, 404 handling, custom domains). Every request runs the Worker first: it redirects the old hostname `planetext.cldixon.dev` to `plane-text.cldixon.dev` (301, same path), serves `/data/*` from R2, and passes every other path to the static assets.
 - `src/index.ts`: serves allowlisted files from the private R2 bucket `plane-text` at `/data/<key>`, with HEAD, byte ranges (206 + `Content-Range`), `ETag` and `Last-Modified`. DuckDB-WASM on `/explore` reads parquet through it with Range requests. To expose another file, add its key to `EXPOSED_KEYS`.
 - `wrangler.config.ts`: points the asset build at `../dist`. `cf build` uses Wrangler internally to package static assets; this file is that bundler's setting, not a Wrangler CLI config.
 
