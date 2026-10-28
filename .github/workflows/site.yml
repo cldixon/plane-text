@@ -1,0 +1,115 @@
+name: Site deploy
+
+# Production on every push to main; a preview version (uploaded, not deployed)
+# for every pull request, with its URL posted on the pull request. Only runs
+# when the site changes.
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/site.yml"]
+  pull_request:
+    paths: ["site/**", ".github/workflows/site.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  # One production deploy at a time, in order; a newer push to a pull request
+  # replaces its running preview.
+  group: site-deploy-${{ github.event.pull_request.number || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy:
+    name: ${{ github.event_name == 'pull_request' && 'Preview' || 'Production' }}
+    # Pull requests from forks get no secrets, so no preview.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: site
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check for Cloudflare credentials
+        id: credentials
+        working-directory: .
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are not set as repository secrets; skipping the deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.credentials.outputs.ready == 'true'
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.credentials.outputs.ready == 'true'
+        with:
+          bun-version: 1.4.4
+
+      # cf runs on Node (22.18 or later); Astro builds on Bun.
+      - uses: actions/setup-node@v4
+        if: steps.credentials.outputs.ready == 'true'
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        if: steps.credentials.outputs.ready == 'true'
+        run: bun install --frozen-lockfile && bun install --frozen-lockfile --cwd cloudflare
+
+      # astro check, then astro build into site/dist.
+      - name: Build
+        if: steps.credentials.outputs.ready == 'true'
+        run: bun run build
+
+      - name: Deploy to production
+        if: steps.credentials.outputs.ready == 'true' && github.event_name == 'push'
+        working-directory: site/cloudflare
+        run: npx cf deploy --message "${GITHUB_SHA::7}"
+
+      - name: Upload preview version
+        id: preview
+        if: steps.credentials.outputs.ready == 'true' && github.event_name == 'pull_request'
+        working-directory: site/cloudflare
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -o pipefail
+          # cf reports on stderr.
+          npx cf workers versions create --preview-alias "pr-$PR_NUMBER" --message "PR #$PR_NUMBER at ${HEAD_SHA::7}" 2>&1 | tee upload.log
+          url=$(sed -n 's/.*Version Preview Alias URL: *\(https:[^ ]*\).*/\1/p' upload.log | head -1)
+          if [ -z "$url" ]; then
+            echo "::error::No preview URL in the cf output."
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # One comment per pull request, updated on every push.
+      - name: Post the preview URL
+        if: steps.preview.outputs.url
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          URL: ${{ steps.preview.outputs.url }}
+        run: |
+          marker="<!-- site-preview -->"
+          body="$marker
+          Site preview: $URL (at ${HEAD_SHA::7})"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
+          fi
