@@ -6,7 +6,7 @@ The `cf` project that deploys the built site (`../dist`) on Cloudflare Workers: 
 - `src/index.ts`: serves allowlisted files from the private R2 bucket `plane-text` at `/data/<key>`, with HEAD, byte ranges (206 + `Content-Range`), `ETag` and `Last-Modified`. DuckDB-WASM on `/explore` reads parquet through it with Range requests. To expose another file, add its key to `EXPOSED_KEYS`.
 - `wrangler.config.ts`: points the asset build at `../dist`. `cf build` uses Wrangler internally to package static assets; this file is that bundler's setting, not a Wrangler CLI config.
 
-Run from `site/` with `bun run preview` or `bun run deploy`, or here with `bun run build | check | dev | deploy`. `check` generates the binding types (`cf workers types`, into `.cloudflare/types`) and type-checks the Worker.
+Run from `site/` with `bun run preview`, `bun run deploy` or `bun run deploy:preview`, or here with `bun run build | check | dev | deploy | deploy:preview`. `deploy:preview` uploads a Worker version without deploying it, under a preview alias named after the git branch: `https://<branch>-plane-text.cl-dixon.workers.dev`. Preview URLs are on (`previewUrls`); production stays off workers.dev (`workersDev: false`), only on the custom domain. A preview uses the same R2 binding as production. `check` generates the binding types (`cf workers types`, into `.cloudflare/types`) and type-checks the Worker.
 
 ## Local data
 

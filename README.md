@@ -82,9 +82,10 @@ bun run dev       # Astro dev server
 bun run build     # type-check, then build to site/dist
 bun run preview   # build, then serve the built site locally with cf dev
 bun run deploy    # build, then deploy with cf
+bun run deploy:preview   # build, then upload a version (not deployed) with a preview URL named after the branch
 ```
 
-Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta), configured in `site/cloudflare/cloudflare.config.ts`. It is a separate project inside `site/` because `cf` does not yet build Astro projects directly: Astro builds `site/dist`, and `cf` packages that directory as static assets. `cf` itself runs on Node 22.18 or later, since it cannot load `cloudflare.config.ts` on Bun yet. Deploying needs `CLOUDFLARE_API_TOKEN`.
+Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta), configured in `site/cloudflare/cloudflare.config.ts`. It is a separate project inside `site/` because `cf` does not yet build Astro projects directly: Astro builds `site/dist`, and `cf` packages that directory as static assets. `cf` itself runs on Node 22.18 or later, since it cannot load `cloudflare.config.ts` on Bun yet. Deploying needs `CLOUDFLARE_API_TOKEN`. A preview lives at `https://<branch>-plane-text.cl-dixon.workers.dev` (the branch name after its last `/`); production is served only on the custom domain.
 
 The home page is a single page: overview, an in-browser SQL explorer, the datasets, how they are built, and status. The explorer runs DuckDB-WASM (loaded from jsDelivr) over the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
 

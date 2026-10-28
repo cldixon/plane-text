@@ -14,5 +14,9 @@ export default defineConfig({
 			DATA: bindings.r2({ name: "plane-text" }),
 		},
 		domains: ["planetext.cldixon.dev"],
+		// Production is served only on the custom domain; uploaded versions get
+		// preview URLs on workers.dev (cf workers versions create --preview-alias).
+		workersDev: false,
+		previewUrls: true,
 	},
 });

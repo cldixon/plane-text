@@ -11,6 +11,7 @@
     "build": "cf build",
     "check": "cf workers types && tsc -p .",
     "dev": "cf dev",
-    "deploy": "cf deploy"
+    "deploy": "cf deploy",
+    "deploy:preview": "cf workers versions create --preview-alias $(git rev-parse --abbrev-ref HEAD | sed 's|.*/||; s|[^a-z0-9-]|-|g' | cut -c1-40)"
   }
 }

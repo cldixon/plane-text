@@ -7,7 +7,8 @@
     "check": "bunx --bun astro check",
     "build": "bunx --bun astro check && bunx --bun astro build",
     "preview": "bun run build && bun run --cwd cloudflare dev",
-    "deploy": "bun run build && bun run --cwd cloudflare deploy"
+    "deploy": "bun run build && bun run --cwd cloudflare deploy",
+    "deploy:preview": "bun run build && bun run --cwd cloudflare deploy:preview"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.1.1",
