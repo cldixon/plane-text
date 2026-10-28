@@ -13,7 +13,7 @@ export type Link = { label: string; href: string };
  */
 export const links: Link[] = [
   { label: "GitHub", href: "https://github.com/cldixon/plane-text" },
-  { label: "cldixon.dev", href: "https://cldixon.dev" },
+  { label: "cldixon.com", href: "https://cldixon.com" },
 ];
 
 export type Dataset = {

@@ -12,6 +12,7 @@
   --color-text-muted: #aaa;
   --color-border: #444;
   --color-error: #ff6b6b;
+  --color-link: #3b9dff;
 
   /* Typography */
   --font-family-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
