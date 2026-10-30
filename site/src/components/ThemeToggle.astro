@@ -11,11 +11,11 @@ import { Moon, Sun } from "@lucide/astro";
 
 <button type="button" class="theme-toggle" data-theme-toggle>
   <span class="to-light">
-    <Sun size={18} stroke-width={1.5} aria-hidden="true" />
+    <Sun size={16} stroke-width={1.75} aria-hidden="true" />
     <span class="visually-hidden">Switch to light theme</span>
   </span>
   <span class="to-dark">
-    <Moon size={18} stroke-width={1.5} aria-hidden="true" />
+    <Moon size={16} stroke-width={1.75} aria-hidden="true" />
     <span class="visually-hidden">Switch to dark theme</span>
   </span>
 </button>
@@ -36,14 +36,35 @@ import { Moon, Sun } from "@lucide/astro";
 </script>
 
 <style>
+  /* A quiet icon: muted until hovered, when it brightens over a soft round
+     fill. The visible circle is smaller than the hit area, which ::before
+     widens to the minimum touch target. */
   .theme-toggle {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--target-min);
-    height: var(--target-min);
+    width: 2.25rem;
+    height: 2.25rem;
+    min-height: 0;
     padding: 0;
+    color: var(--color-text-muted);
     border: 0;
+    border-radius: 50%;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .theme-toggle::before {
+    content: "";
+    position: absolute;
+    inset: calc((2.25rem - var(--target-min)) / 2);
+  }
+
+  .theme-toggle:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
   }
 
   .to-light,
