@@ -1,6 +1,6 @@
 /*
  * Element defaults, built only from tokens. Links keep the browser's
- * underline, in a plain blue that reads on black.
+ * underline, in a plain blue that reads on either theme.
  */
 
 *,
@@ -35,11 +35,35 @@ h1 {
 }
 
 code,
-pre {
+pre,
+textarea {
   font-family: var(--font-family-mono);
 }
 
 a,
 a:visited {
   color: var(--color-link);
+}
+
+/* Buttons: a plain outline in the text color, so they follow the theme. */
+button {
+  min-height: 2.25rem;
+  padding: 0 var(--space-2);
+  font: inherit;
+  color: var(--color-text);
+  background: transparent;
+  border: var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: default;
+}
+
+:focus-visible {
+  outline: var(--border-width) solid var(--color-text);
+  outline-offset: 2px;
 }

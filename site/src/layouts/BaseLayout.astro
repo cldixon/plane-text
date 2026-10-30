@@ -1,5 +1,6 @@
 ---
 import "@design/index.css";
+import ThemeToggle from "@components/ThemeToggle.astro";
 import { site } from "../site";
 
 interface Props {
@@ -21,8 +22,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <script is:inline>
+      // Apply a saved light theme before the page paints; dark is the default.
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.dataset.theme = "light";
+      } catch {}
+    </script>
   </head>
   <body>
+    <header>
+      <ThemeToggle />
+    </header>
     <main class:list={{ wide }}>
       <slot />
     </main>
@@ -30,10 +40,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <style>
+  header {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--space-3) var(--gutter);
+  }
+
   main {
     max-width: var(--measure);
     margin: 0 auto;
-    padding: var(--space-5) var(--gutter);
+    padding: var(--space-4) var(--gutter) var(--space-5);
   }
 
   main.wide {

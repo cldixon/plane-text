@@ -4,30 +4,37 @@
  */
 
 :root {
-  /* Color: white on black. color-scheme tells the browser to draw links and
-     form controls for a dark background. */
+  /* Color: white on black by default. color-scheme tells the browser to draw
+     form controls and scrollbars to match. The palette is black, white,
+     grays, one silver, and a blue kept for links. */
   --color-scheme: dark;
   --color-background: #000;
   --color-text: #fff;
-  --color-text-muted: #aaa;
-  --color-border: #444;
+  --color-text-muted: #9a9a9a;
+  --color-border: #333;
+  --color-border-strong: #666;
+  --color-metal: #b8bcc2;
+  --color-link: #5aa9ff;
   --color-error: #ff6b6b;
-  --color-link: #3b9dff;
 
-  /* Typography */
-  --font-family-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Typography: B612 Mono for the title, labels, data and code; Public Sans
+     for reading. Both are self-hosted from @fontsource, see index.css. */
+  --font-family-body: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: "B612 Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.25rem;
   --font-size-xl: 2rem;
+  --font-size-display: clamp(2.25rem, 6vw, 3rem);
 
   --font-weight-normal: 400;
   --font-weight-bold: 700;
 
   --line-height-tight: 1.2;
-  --line-height-body: 1.5;
+  --line-height-body: 1.6;
+
+  --letter-spacing-label: 0.08em;
 
   /* Space */
   --space-1: 0.25rem;
@@ -38,15 +45,31 @@
 
   /* Layout */
   --measure: 40rem;
-  --measure-wide: 80rem;
-  --gutter: var(--space-3);
+  --measure-wide: 70rem;
+  --gutter: 1.5rem;
+  --target-min: 2.75rem;
 
   /* Borders */
   --border-width: 1px;
   --border: var(--border-width) solid var(--color-border);
+  --border-strong: var(--border-width) solid var(--color-border-strong);
+  --radius: 2px;
 
   /* Data tables: the widest a cell grows before its text is cut off, and the
      tallest a result grows before it scrolls. */
   --cell-max-width: 20rem;
   --results-max-height: 28rem;
+}
+
+/* Light theme: black on white. Set by the theme toggle on <html>. */
+:root[data-theme="light"] {
+  --color-scheme: light;
+  --color-background: #fff;
+  --color-text: #000;
+  --color-text-muted: #5c5c5c;
+  --color-border: #e0e0e0;
+  --color-border-strong: #9e9e9e;
+  --color-metal: #8c9199;
+  --color-link: #0b5cd5;
+  --color-error: #b3261e;
 }

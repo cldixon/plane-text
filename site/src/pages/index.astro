@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import SqlViewer from "@components/SqlViewer.svelte";
-import { datasets, links, site } from "../site";
+import { site } from "../site";
 
 /** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
 const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
@@ -41,22 +41,11 @@ LIMIT 100`,
 ];
 ---
 
-<BaseLayout>
-  <header class="prose">
-    <h1>{site.title}</h1>
-    <p class="lede">An open corpus of aviation maintenance text, built only from public sources.</p>
-    <nav aria-label="Project links">
-      {links.map((link, i) => (
-        <>
-          {i > 0 && " · "}
-          <a href={link.href}>{link.label}</a>
-        </>
-      ))}
-    </nav>
-  </header>
+<BaseLayout wide>
+  <h1>{site.title}</h1>
 
-  <section class="prose" aria-labelledby="overview">
-    <h2 id="overview">Overview</h2>
+  <section class="prose" aria-labelledby="abstract">
+    <h2 id="abstract">Abstract</h2>
     <p>
       Aircraft maintenance runs on text: the regulations that govern it, the airworthiness directives that order
       inspections and repairs, the bulletins and advisory circulars that explain them, and the reports mechanics and
@@ -70,111 +59,48 @@ LIMIT 100`,
     </p>
   </section>
 
-  <section class="prose" aria-labelledby="explore">
-    <h2 id="explore">Explore</h2>
-    <p>
-      Query the FAA airworthiness directives with SQL, right here. The query runs in your browser with <a
-        href="https://duckdb.org/docs/api/wasm/overview">DuckDB-WASM</a>, which reads only the parts of the parquet
-      file it needs. The table is <code>ads</code>, one row per directive.
+  <section aria-labelledby="explore">
+    <h2 id="explore">Data explorer</h2>
+    <p class="prose">
+      Query the FAA airworthiness directives with SQL, in your browser. The table is <code>ads</code>, one row per
+      directive.
     </p>
     <SqlViewer client:only="svelte" {src} view="ads" {initialQuery} {examples} />
   </section>
-
-  <section class="prose" aria-labelledby="datasets">
-    <h2 id="datasets">Datasets</h2>
-    <p>Each dataset is published as dated snapshots of parquet files.</p>
-    <dl>
-      {
-        datasets.map((dataset) => (
-          <>
-            <dt>
-              {dataset.title} <code>{dataset.name}</code>
-            </dt>
-            <dd>
-              {dataset.size}. Source: {dataset.source}.{dataset.note && ` ${dataset.note}`}
-            </dd>
-          </>
-        ))
-      }
-    </dl>
-  </section>
-
-  <section class="prose" aria-labelledby="how">
-    <h2 id="how">How it is built</h2>
-    <p>
-      Every dataset comes in two layers. <strong>Raw</strong> is the source as delivered, converted to parquet with its
-      own field names and nothing changed. <strong>Processed</strong> is built only from raw: cleaned, typed, one row
-      per document or report, with coded fields decoded into readable labels next to their codes. Each file records
-      where it came from and when.
-    </p>
-    <p>
-      The pipelines are Python, and they run on Cloudflare: each run starts a container that fetches its source and
-      writes both layers to storage. The code is on <a href="https://github.com/cldixon/plane-text">GitHub</a>.
-    </p>
-  </section>
-
-  <section class="prose" aria-labelledby="status">
-    <h2 id="status">Status</h2>
-    <p>
-      Early and changing. The datasets above are built and stored; for now you can query the airworthiness
-      directives here. Downloads, scheduled updates, more sources (EASA, NASA ASRS and Transport Canada among them)
-      and a data license are next. All sources are US government works or other public records.
-    </p>
-  </section>
-
-  <footer class="prose">
-    <nav aria-label="Project links">
-      {links.map((link, i) => (
-        <>
-          {i > 0 && " · "}
-          <a href={link.href}>{link.label}</a>
-        </>
-      ))}
-    </nav>
-  </footer>
 </BaseLayout>
 
 <style>
-  /* Text blocks sit in a centered column; headings, header and footer are
-     centered too, while paragraphs stay left-aligned for reading. */
+  /* An academic paper's layout: a centered title, then text in a centered
+     reading column; the explorer uses the full wide measure. */
+  h1 {
+    margin: 0 0 var(--space-5);
+    text-align: center;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-display);
+    font-weight: var(--font-weight-normal);
+  }
+
   .prose {
     max-width: var(--measure);
     margin-inline: auto;
   }
 
-  header,
-  h2,
-  footer {
-    text-align: center;
-  }
-
-  section,
-  footer {
+  section + section {
     margin-top: var(--space-5);
   }
 
-  .lede {
-    font-size: var(--font-size-lg);
-  }
-
-  dt {
-    margin-top: var(--space-3);
-    font-weight: var(--font-weight-bold);
-  }
-
-  dt code {
-    font-weight: var(--font-weight-normal);
+  h2 {
+    margin: 0 0 var(--space-3);
+    text-align: center;
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
     color: var(--color-text-muted);
   }
 
-  dd {
-    margin: 0;
-  }
-
-  footer {
-    color: var(--color-text-muted);
-    border-top: var(--border);
-    padding-top: var(--space-3);
+  p.prose {
+    margin-bottom: var(--space-4);
   }
 </style>
