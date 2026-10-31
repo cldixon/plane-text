@@ -11,8 +11,9 @@ Runs the `plane_text` pipelines in a [Cloudflare Container](https://developers.c
 | `ntsb` | `ntsb_lookups`, then `ntsb`, then `ntsb_findings` | `standard-3` (2 vCPU, 8 GiB) | 1 h |
 | `faa-saibs` | `faa_guidance SAIB --workers 4` | `standard-4` | 1 h |
 | `faa-maintenance-alerts` | `faa_guidance ALERTS --workers 4` | `standard-4` | 1 h |
+| `release` | `release --release <n>`: the newest snapshot of every processed dataset in R2, zipped as `plane-text-v<n>` (about 400 MB) | `standard-2` (1 vCPU, 6 GiB) | 1 h |
 
-Each step is `python -m plane_text.<step> --upload --snapshot <date>`, all with the same date (the request's `snapshot`, or today in UTC), stopping at the first step that fails. Steps share the container's disk, so a later step reads what an earlier one built: processed SDRs and NTSB tables decode their codes with the lookups built just before them.
+Each step is `python -m plane_text.<step> --upload --snapshot <date>`, all with the same date (the request's `snapshot`, or today in UTC), stopping at the first step that fails. `release` is run by hand, after the datasets it should freeze, and needs `?release=<n>` (passed as `--release <n>`; the date names the release). Steps share the container's disk, so a later step reads what an earlier one built: processed SDRs and NTSB tables decode their codes with the lookups built just before them.
 
 Advisory circulars are not run here: every run would re-download 2.5 GB of PDFs and OCR about 7,000 scanned pages, hours of work that is almost all repeated. They need extraction state that outlives the container first.
 
@@ -31,6 +32,7 @@ curl -X POST -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.
 curl -X POST -H "Authorization: Bearer $RUN_TOKEN" "https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads?snapshot=2026-10-27"
 curl -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads   # latest 20 runs
 curl -X DELETE -H "Authorization: Bearer $RUN_TOKEN" https://plane-text-pipelines.cl-dixon.workers.dev/runs/faa-ads   # stop the current run
+curl -X POST -H "Authorization: Bearer $RUN_TOKEN" "https://plane-text-pipelines.cl-dixon.workers.dev/runs/release?release=2"   # publish plane-text-v2
 ```
 
 `POST` answers 202 with the new run, or 409 with the current one if the pipeline is already running. `DELETE` records the current run as cancelled and destroys its container. Right after a deploy, a Durable Object still running the previous code can answer 500 until it restarts; retry. Container output (the pipeline's own log) is in the Worker's observability logs.

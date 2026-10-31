@@ -2,14 +2,14 @@
 /**
  * The tab bar under the masthead. Each tab is a link to its own page, so a
  * tab can be linked to and the back button works; the current one is marked
- * with aria-current.
+ * with aria-current. At its right end, the download of the latest release:
+ * /download, which the Worker redirects to the release's zip in R2.
  */
-import { FileText, FolderOpen, SquareTerminal } from "@lucide/astro";
+import { Download, FileText, SquareTerminal } from "@lucide/astro";
 
 const tabs = [
   { href: "/", label: "Overview", icon: FileText },
   { href: "/shell", label: "Shell", icon: SquareTerminal },
-  { href: "/files", label: "Files", icon: FolderOpen },
 ];
 
 // Pages build as single files, so this is "/shell.html" at build time.
@@ -25,6 +25,11 @@ const path = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, "") || "/";
       </a>
     ))
   }
+  <!-- A full navigation, not the client router's: the response is a file to save. -->
+  <a href="/download" class="download" download data-astro-reload title="Download the latest release: every processed dataset as parquet, zipped">
+    <Download size={16} stroke-width={1.75} aria-hidden="true" />
+    Download
+  </a>
 </nav>
 
 <style>
@@ -58,5 +63,11 @@ const path = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, "") || "/";
   a[aria-current="page"] {
     color: var(--color-text);
     border-bottom-color: var(--color-text);
+  }
+
+  .download,
+  .download:visited {
+    margin-left: auto;
+    color: var(--color-text);
   }
 </style>
