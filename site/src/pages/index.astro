@@ -1,56 +1,34 @@
 ---
-import BaseLayout from "@layouts/BaseLayout.astro";
-import Badge from "@components/Badge.astro";
-import SqlViewer from "@components/SqlViewer.svelte";
-import { badges, site } from "../site";
+import SiteLayout from "@layouts/SiteLayout.astro";
+import BarChart, { type Bar } from "@components/BarChart.astro";
+import DataPlate from "@components/DataPlate.astro";
+import { datasets, formatCount } from "../corpus";
 
-/** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
-const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
-
-const initialQuery = `SELECT ad_number, effective_date, status, make, subject
-FROM ads
-ORDER BY effective_date DESC
-LIMIT 100`;
-
-const examples = [
-  { label: "Latest ADs", query: initialQuery },
-  {
-    label: "ADs per year",
-    query: `SELECT year(effective_date) AS year, count(*) AS ads
-FROM ads
-WHERE effective_date IS NOT NULL
-GROUP BY year
-ORDER BY year DESC`,
-  },
-  {
-    label: "Most-cited manufacturers",
-    query: `SELECT manufacturer, count(*) AS ads
-FROM (SELECT unnest(make) AS manufacturer FROM ads)
-GROUP BY manufacturer
-ORDER BY ads DESC
-LIMIT 25`,
-  },
-  {
-    label: "Search subjects",
-    query: `SELECT ad_number, effective_date, make, subject
-FROM ads
-WHERE subject ILIKE '%landing gear%'
-ORDER BY effective_date DESC
-LIMIT 100`,
-  },
-  { label: "Columns", query: "DESCRIBE ads" },
+// Records per dataset, on a log scale from 100 to 2 million: the service
+// difficulty reports would otherwise flatten every other bar.
+const [logMin, logMax] = [2, Math.log10(2e6)];
+const logAt = (n: number) => (Math.log10(n) - logMin) / (logMax - logMin);
+const recordBars: Bar[] = datasets
+  .filter((d) => d.rows !== null)
+  .sort((a, b) => (b.rows ?? 0) - (a.rows ?? 0))
+  .map((d) => ({ label: d.name, from: 0, to: logAt(d.rows ?? 1), value: formatCount(d.rows ?? 0, d.approximate) }));
+const recordTicks = [
+  { at: logAt(100), label: "100" },
+  { at: logAt(1e4), label: "10k" },
+  { at: logAt(1e6), label: "1M" },
 ];
+
+// Years covered, for the datasets whose span is known.
+const [yearMin, yearMax] = [1940, 2030];
+const yearAt = (y: number) => (y - yearMin) / (yearMax - yearMin);
+const spanBars: Bar[] = datasets
+  .flatMap((d) => (d.span ? [{ name: d.name, span: d.span }] : []))
+  .sort((a, b) => a.span[0] - b.span[0])
+  .map(({ name, span }) => ({ label: name, from: yearAt(span[0]), to: yearAt(span[1]), value: span.join("–") }));
+const yearTicks = [1940, 1980, 2020].map((y) => ({ at: yearAt(y), label: String(y) }));
 ---
 
-<BaseLayout>
-  <header class="masthead">
-    <h1>{site.title}</h1>
-    <p class="tagline">{site.tagline}</p>
-    <nav aria-label="Project links">
-      {badges.map((badge) => <Badge {...badge} />)}
-    </nav>
-  </header>
-
+<SiteLayout>
   <section aria-labelledby="abstract">
     <h2 id="abstract">Abstract</h2>
     <p>
@@ -66,48 +44,15 @@ LIMIT 100`,
     </p>
   </section>
 
-  <section aria-labelledby="explore">
-    <h2 id="explore">Explore</h2>
-    <p>
-      Query the FAA airworthiness directives with SQL, in your browser. The table is <code>ads</code>, one row per
-      directive.
-    </p>
-    <SqlViewer client:only="svelte" {src} view="ads" {initialQuery} {examples} />
+  <section aria-labelledby="corpus" class="corpus">
+    <h2 id="corpus">The corpus</h2>
+    <DataPlate />
+    <BarChart caption="Records per dataset" note="log scale" bars={recordBars} ticks={recordTicks} />
+    <BarChart caption="Coverage by year" bars={spanBars} ticks={yearTicks} />
   </section>
-</BaseLayout>
+</SiteLayout>
 
 <style>
-  /* Laid out like a project README: a centered masthead (title, tagline,
-     link badges), then left-aligned sections in one column. */
-  .masthead {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-    text-align: center;
-  }
-
-  h1 {
-    margin: 0;
-    font-family: var(--font-family-mono);
-    font-size: var(--font-size-display);
-    font-weight: var(--font-weight-normal);
-  }
-
-  .tagline {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    color: var(--color-text-muted);
-  }
-
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-2);
-  }
-
   section + section {
     margin-top: var(--space-5);
   }
@@ -119,7 +64,13 @@ LIMIT 100`,
     font-weight: var(--font-weight-normal);
   }
 
-  section > p:last-of-type {
-    margin-bottom: var(--space-4);
+  .corpus {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .corpus h2 {
+    margin: 0;
   }
 </style>

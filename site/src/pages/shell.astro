@@ -1,0 +1,15 @@
+---
+import SiteLayout from "@layouts/SiteLayout.astro";
+import Shell from "@components/Shell.svelte";
+import { datasets, formatCount, shellTables } from "../corpus";
+
+const tables = shellTables.map((table) => {
+  const dataset = datasets.find((d) => d.name === table.dataset);
+  return { name: table.name, src: table.src, rows: dataset?.rows ? formatCount(dataset.rows) : "" };
+});
+const soon = datasets.map((d) => d.name).filter((name) => !shellTables.some((t) => t.dataset === name));
+---
+
+<SiteLayout title="Shell">
+  <Shell client:only="svelte" {tables} {soon} />
+</SiteLayout>

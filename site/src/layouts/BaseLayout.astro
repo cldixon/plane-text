@@ -1,5 +1,6 @@
 ---
 import "@design/index.css";
+import { ClientRouter } from "astro:transitions";
 import ThemeToggle from "@components/ThemeToggle.astro";
 import { site } from "../site";
 
@@ -24,10 +25,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     <script is:inline>
       // Apply a saved light theme before the page paints; dark is the default.
-      try {
-        if (localStorage.getItem("theme") === "light") document.documentElement.dataset.theme = "light";
-      } catch {}
+      // The client router swaps <html> attributes on navigation, so apply it
+      // again after every swap.
+      (() => {
+        const apply = (doc) => {
+          try {
+            if (localStorage.getItem("theme") === "light") doc.documentElement.dataset.theme = "light";
+          } catch {}
+        };
+        apply(document);
+        if (!window.__themeOnSwap) {
+          window.__themeOnSwap = true;
+          document.addEventListener("astro:before-swap", (event) => apply(event.newDocument));
+        }
+      })();
     </script>
+    <ClientRouter />
   </head>
   <body>
     <header>

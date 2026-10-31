@@ -1,0 +1,146 @@
+---
+/**
+ * A horizontal bar chart in plain HTML: one labelled row per bar, a value at
+ * the end, and an axis of ticks underneath. Bars are a single gray, so a
+ * reader never needs color to tell them apart. Each row also carries its
+ * value as text, which is what screen readers read.
+ */
+
+export type Bar = {
+  label: string;
+  /** Where the bar starts and ends, as fractions of the plot width. */
+  from: number;
+  to: number;
+  /** The value shown at the end of the row. */
+  value: string;
+};
+
+interface Props {
+  caption: string;
+  /** A muted note after the caption, e.g. the scale. */
+  note?: string;
+  bars: Bar[];
+  /** Axis ticks, at fractions of the plot width. */
+  ticks: { at: number; label: string }[];
+}
+
+const { caption, note, bars, ticks } = Astro.props;
+const pct = (f: number) => `${(f * 100).toFixed(2)}%`;
+---
+
+<figure>
+  <figcaption>{caption}{note && <span class="note"> · {note}</span>}</figcaption>
+  <ul>
+    {
+      bars.map((bar) => (
+        <li title={`${bar.label}: ${bar.value}`}>
+          <span class="label">{bar.label}</span>
+          <span class="plot" aria-hidden="true">
+            <span
+              class:list={["bar", { floating: bar.from > 0 }]}
+              style={`left: ${pct(bar.from)}; width: ${pct(bar.to - bar.from)}`}
+            />
+          </span>
+          <span class="value">{bar.value}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <div class="axis" aria-hidden="true">
+    <span></span>
+    <span class="ticks">
+      {ticks.map((tick) => <span style={`left: ${pct(tick.at)}`}>{tick.label}</span>)}
+    </span>
+    <span></span>
+  </div>
+</figure>
+
+<style>
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    font-family: var(--font-family-mono);
+    font-size: 0.75rem;
+  }
+
+  figcaption {
+    margin-bottom: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+
+  .note {
+    color: var(--color-text-muted);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li,
+  .axis {
+    display: grid;
+    grid-template-columns: clamp(6rem, 30%, 13rem) minmax(0, 1fr) 4.5rem;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  li {
+    padding: var(--space-1) 0;
+    border-radius: var(--radius);
+  }
+
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+  }
+
+  .plot {
+    position: relative;
+    height: 0.875rem;
+    border-left: var(--border-strong);
+  }
+
+  .bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 4px;
+    background: var(--color-metal);
+    border-radius: 0 4px 4px 0;
+    transition: background-color var(--transition-fast);
+  }
+
+  /* A range that does not start at the axis is rounded at both ends. */
+  .bar.floating {
+    border-radius: 4px;
+  }
+
+  li:hover {
+    background: var(--color-hover);
+  }
+
+  li:hover .bar {
+    background: var(--color-text);
+  }
+
+  .value {
+    text-align: right;
+  }
+
+  .ticks {
+    position: relative;
+    height: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .ticks span {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+</style>

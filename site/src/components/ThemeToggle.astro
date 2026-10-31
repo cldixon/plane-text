@@ -21,18 +21,19 @@ import { Moon, Sun } from "@lucide/astro";
 </button>
 
 <script>
-  const root = document.documentElement;
-  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")) {
-    button.addEventListener("click", () => {
-      const theme = root.dataset.theme === "light" ? "dark" : "light";
-      root.dataset.theme = theme;
-      try {
-        localStorage.setItem("theme", theme);
-      } catch {
-        // Storage can be blocked; the theme still applies to this page.
-      }
-    });
-  }
+  // Listen on the document: the client router replaces the button on every
+  // navigation, but this module runs only once.
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest("[data-theme-toggle]")) return;
+    const root = document.documentElement;
+    const theme = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // Storage can be blocked; the theme still applies to this page.
+    }
+  });
 </script>
 
 <style>
