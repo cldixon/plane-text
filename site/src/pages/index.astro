@@ -1,7 +1,8 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
+import Badge from "@components/Badge.astro";
 import SqlViewer from "@components/SqlViewer.svelte";
-import { site } from "../site";
+import { badges, site } from "../site";
 
 /** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
 const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
@@ -41,10 +42,16 @@ LIMIT 100`,
 ];
 ---
 
-<BaseLayout wide>
-  <h1>{site.title}</h1>
+<BaseLayout>
+  <header class="masthead">
+    <h1>{site.title}</h1>
+    <p class="tagline">{site.tagline}</p>
+    <nav aria-label="Project links">
+      {badges.map((badge) => <Badge {...badge} />)}
+    </nav>
+  </header>
 
-  <section class="prose" aria-labelledby="abstract">
+  <section aria-labelledby="abstract">
     <h2 id="abstract">Abstract</h2>
     <p>
       Aircraft maintenance runs on text: the regulations that govern it, the airworthiness directives that order
@@ -60,8 +67,8 @@ LIMIT 100`,
   </section>
 
   <section aria-labelledby="explore">
-    <h2 id="explore">Data explorer</h2>
-    <p class="prose">
+    <h2 id="explore">Explore</h2>
+    <p>
       Query the FAA airworthiness directives with SQL, in your browser. The table is <code>ads</code>, one row per
       directive.
     </p>
@@ -70,19 +77,35 @@ LIMIT 100`,
 </BaseLayout>
 
 <style>
-  /* An academic paper's layout: a centered title, then text in a centered
-     reading column; the explorer uses the full wide measure. */
-  h1 {
-    margin: 0 0 var(--space-5);
+  /* Laid out like a project README: a centered masthead (title, tagline,
+     link badges), then left-aligned sections in one column. */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
     text-align: center;
+  }
+
+  h1 {
+    margin: 0;
     font-family: var(--font-family-mono);
     font-size: var(--font-size-display);
     font-weight: var(--font-weight-normal);
   }
 
-  .prose {
-    max-width: var(--measure);
-    margin-inline: auto;
+  .tagline {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
   }
 
   section + section {
@@ -91,16 +114,12 @@ LIMIT 100`,
 
   h2 {
     margin: 0 0 var(--space-3);
-    text-align: center;
     font-family: var(--font-family-mono);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-h2);
     font-weight: var(--font-weight-normal);
-    letter-spacing: var(--letter-spacing-label);
-    text-transform: uppercase;
-    color: var(--color-text-muted);
   }
 
-  p.prose {
+  section > p:last-of-type {
     margin-bottom: var(--space-4);
   }
 </style>

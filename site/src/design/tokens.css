@@ -27,7 +27,9 @@
   --font-size-base: 1rem;
   --font-size-lg: 1.25rem;
   --font-size-xl: 2rem;
-  --font-size-display: clamp(2.25rem, 6vw, 3rem);
+  --font-size-h2: 1.375rem;
+  --font-size-badge: 0.75rem;
+  --font-size-display: clamp(2.5rem, 7vw, 3.5rem);
 
   --font-weight-normal: 400;
   --font-weight-bold: 700;
@@ -45,7 +47,7 @@
   --space-5: 4rem;
 
   /* Layout */
-  --measure: 40rem;
+  --measure: 56rem;
   --measure-wide: 70rem;
   --gutter: 1.5rem;
   --target-min: 2.75rem;
