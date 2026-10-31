@@ -44,8 +44,8 @@ const yearTicks = [1940, 1980, 2020].map((y) => ({ at: yearAt(y), label: String(
     </p>
   </section>
 
-  <section aria-labelledby="corpus" class="corpus">
-    <h2 id="corpus">The corpus</h2>
+  <section aria-labelledby="data-plate" class="corpus">
+    <h2 id="data-plate">The data plate</h2>
     <DataPlate />
     <BarChart caption="Records per dataset" note="log scale" bars={recordBars} ticks={recordTicks} />
     <BarChart caption="Coverage by year" bars={spanBars} ticks={yearTicks} />
