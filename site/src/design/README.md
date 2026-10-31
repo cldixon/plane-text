@@ -20,3 +20,4 @@ python -c "from fontTools.ttLib import TTFont; from fontTools.varLib import inst
 
 The same for the italic. Both need `fonttools` and `brotli`.
 
+The query console (the floating Query button and the SQL shell it opens) takes its look from its own `--console-*` tokens in `tokens.css`, which default to the site's. Restyling the console means changing those, not the components.

@@ -35,7 +35,6 @@
   --font-size-lg: 1.25rem;
   --font-size-xl: 2rem;
   --font-size-h2: 1.375rem;
-  --font-size-badge: 0.75rem;
   --font-size-display: clamp(2.5rem, 7vw, 3.5rem);
 
   --font-weight-normal: 400;
@@ -72,7 +71,22 @@
      tallest a result grows before it scrolls. */
   --cell-max-width: 20rem;
   --results-max-height: 28rem;
-  --shell-height: 32rem;
+
+  /* The query console: the floating Query button and the shell it opens. Its
+     own tokens, drawn from the site's for now, so that it can take a look of
+     its own (a cockpit display) by changing these alone. */
+  --console-background: var(--color-background);
+  --console-surface: var(--color-surface);
+  --console-text: var(--color-text);
+  --console-text-muted: var(--color-text-muted);
+  --console-border: var(--color-border-strong);
+  --console-accent: var(--color-text);
+  --console-error: var(--color-error);
+  --console-font: var(--font-family-terminal);
+  --console-font-label: var(--font-family-label);
+  --console-radius: var(--radius);
+  --console-shadow: 0 0.75rem 2.5rem rgb(0 0 0 / 0.5);
+  --console-backdrop: rgb(0 0 0 / 0.6);
 }
 
 /* Light theme: black on white. Set by the theme toggle on <html>. */

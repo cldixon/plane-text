@@ -6,12 +6,13 @@ export const site = {
   tagline: "An open corpus of aviation maintenance text, built only from public sources.",
 } as const;
 
-/** A link badge under the tagline: a muted key and its value. With no href it
- * shows as not yet available. */
-export type Badge = { key: string; value: string; href?: string };
+/** A link in the masthead's link row. With no href it shows as not yet available. */
+export type ProjectLink = { label: string; href?: string; download?: boolean };
 
-export const badges: Badge[] = [
-  { key: "Code", value: "GitHub", href: "https://github.com/cldixon/plane-text" },
-  { key: "Hub", value: "Hugging Face" },
-  { key: "Author", value: "cldixon.com", href: "https://cldixon.com" },
+export const links: ProjectLink[] = [
+  // The latest release: the Worker redirects /download to its zip.
+  { label: "Download", href: "/download", download: true },
+  { label: "GitHub", href: "https://github.com/cldixon/plane-text" },
+  { label: "Hugging Face" },
+  { label: "cldixon.com", href: "https://cldixon.com" },
 ];

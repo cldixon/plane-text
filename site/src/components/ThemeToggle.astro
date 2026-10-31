@@ -21,8 +21,7 @@ import { Moon, Sun } from "@lucide/astro";
 </button>
 
 <script>
-  // Listen on the document: the client router replaces the button on every
-  // navigation, but this module runs only once.
+  // One listener on the document, for the button wherever it is.
   document.addEventListener("click", (event) => {
     if (!(event.target instanceof Element) || !event.target.closest("[data-theme-toggle]")) return;
     const root = document.documentElement;
