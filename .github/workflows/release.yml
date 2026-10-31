@@ -1,0 +1,75 @@
+name: Release
+
+# Publishes a data release when its tag is pushed: v<major>.<minor>, e.g. v1.1.
+# The tag must point at a commit on main that holds releases/v<version>.json,
+# the pin file merged through a pull request (`python -m plane_text.release pin`).
+# The job builds exactly the pinned snapshots, publishes the zip to R2 (where
+# the site's /download serves it), and creates the GitHub release with notes,
+# the manifest and the README attached.
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    # Approval and the R2 secrets live on this environment (Settings → Environments).
+    environment: release
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      S3_API_ENDPOINT: ${{ secrets.S3_API_ENDPOINT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Check for R2 credentials
+        run: |
+          if [ -z "$S3_API_ENDPOINT" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::error::S3_API_ENDPOINT, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set as secrets of the release environment."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check the tag and its pin file
+        run: |
+          git fetch --quiet origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$TAG is not on main: tag a commit on main, after the pin file's pull request is merged."
+            exit 1
+          fi
+          if [ ! -f "releases/$TAG.json" ]; then
+            echo "::error::releases/$TAG.json is not in $TAG's commit: pin the release (python -m plane_text.release pin) and merge it first."
+            exit 1
+          fi
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --no-dev
+
+      - name: Build and publish to R2
+        run: uv run python -m plane_text.release build "releases/$TAG.json" --upload
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          name="plane-text-$TAG"
+          gh release create "$TAG" --verify-tag --title "$name" \
+            --notes-file "data/releases/$name.notes.md" \
+            "data/releases/$name.manifest.json#manifest.json" \
+            "data/releases/$name.README.md#README.md"

@@ -73,18 +73,31 @@ Every pipeline but the advisory circulars also runs on Cloudflare: a Worker star
 
 ## Releases
 
-The pipelines keep refreshing `processed/` under dated snapshots; a release freezes the corpus as one numbered zip, `plane-text-v<n>.zip`, which is what the site's download serves and what a Hugging Face dataset repo will hold (unzipped). The last step of the pipeline, run by hand when a new version is worth cutting:
+The pipelines keep refreshing `processed/` under dated snapshots. A release freezes one snapshot of every processed dataset (no raw data) as a numbered zip, `plane-text-v<major>.<minor>.zip`: what the site's download serves, and what a Hugging Face dataset repo will hold (unzipped). Releases are cut in GitHub, in two steps:
 
-```sh
-uv run python -m plane_text.release --release 1              # build data/releases/plane-text-v1.zip from R2
-uv run python -m plane_text.release --release 1 --upload     # ...and publish it
-uv run python -m plane_text.release --release 1 --source local   # from data/processed instead of R2
+1. **Pin** the snapshots, and merge them through a pull request:
+
+   ```sh
+   uv run python -m plane_text.release pin 1.1      # writes releases/v1.1.json from R2's newest snapshots
+   git diff --no-index releases/v1.0.json releases/v1.1.json   # what changed since the last release
+   ```
+
+   The pin file lists every object with its size and ETag. CI checks that each pin file is well formed.
+
+2. **Tag** the merge commit on `main` and push the tag:
+
+   ```sh
+   git tag v1.1 <commit on main> && git push origin v1.1
+   ```
+
+   The Release workflow (`.github/workflows/release.yml`) builds exactly the pinned objects, refusing any that changed in R2 since they were pinned. It publishes `releases/plane-text-v1.1.zip` to R2, points `releases/latest.json` at it, and creates the GitHub release `v1.1` with generated notes, the manifest and the README attached. It runs in the `release` environment, which holds the R2 secrets (`S3_API_ENDPOINT`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) and can require an approval.
+
+Versions only go up: a minor bump for a refresh, a major one for a change in what the corpus is. Pinning or publishing at or below a published version is refused. To build a release locally without publishing: `uv run python -m plane_text.release build releases/v1.1.json` (into `data/releases/`).
+
+The zip:
+
 ```
-
-It takes the newest snapshot of every processed dataset in R2 (no raw data) and lays them out as:
-
-```
-plane-text-v<n>/
+plane-text-v<version>/
   README.md        dataset card: contents, layout, provenance, license, citation; its YAML front matter
                    declares each table as a Hugging Face config
   LICENSE          CC BY 4.0
@@ -92,9 +105,7 @@ plane-text-v<n>/
   data/<dataset>/<table>.parquet
 ```
 
-Parquet is stored in the zip uncompressed (it already is, with zstd). Publishing uploads `releases/plane-text-v<n>.zip`, then `releases/latest.json`, which points at it. Release numbers only go up: publishing a number at or below an existing release is refused.
-
-Releases are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the underlying texts are US federal government works.
+Parquet is stored in the zip uncompressed (it already is, with zstd). Releases are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the underlying texts are US federal government works.
 
 ## Site
 
@@ -114,6 +125,6 @@ Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta)
 
 Deploys run in GitHub Actions (`.github/workflows/site.yml`) whenever the site changes: a push to `main` deploys to production, and a pull request gets a preview version (uploaded, not deployed) at `https://pr-<number>-plane-text.cl-dixon.workers.dev`, posted as a comment on the pull request. The workflow needs the repository secrets `CLOUDFLARE_API_TOKEN` (a token from Cloudflare's "Edit Cloudflare Workers" template, for this account and the `cldixon.dev` zone) and `CLOUDFLARE_ACCOUNT_ID`; without them it skips the deploy with a warning. `bun run deploy` and `bun run deploy:preview` still work by hand.
 
-The site is laid out like a project README: the title, a tagline and link badges, then two tabs that share that header, each its own page: Overview (`/`: the abstract, a data plate and charts of the corpus) and Shell (`/shell`: an in-browser SQL shell). At the right of the tab bar, Download fetches the latest release (`/download`, which the Worker redirects to `/download/plane-text-v<n>.zip`, served from R2). Astro's client router switches tabs without reloading the page; a dark/light theme toggle sits top right (dark by default). The corpus figures live in `site/src/corpus.ts`. The shell runs DuckDB-WASM (loaded from jsDelivr) over the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
+The site is laid out like a project README: the title, a tagline and link badges, then two tabs that share that header, each its own page: Overview (`/`: the abstract, a data plate and charts of the corpus) and Shell (`/shell`: an in-browser SQL shell). At the right of the tab bar, Download fetches the latest release (`/download`, which the Worker redirects to `/download/plane-text-v<version>.zip`, served from R2). Astro's client router switches tabs without reloading the page; a dark/light theme toggle sits top right (dark by default). The corpus figures live in `site/src/corpus.ts`. The shell runs DuckDB-WASM (loaded from jsDelivr) over the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
 
 Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.

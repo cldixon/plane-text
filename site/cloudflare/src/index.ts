@@ -8,7 +8,7 @@
  *   DuckDB-WASM reads parquet with HTTP Range requests, so this supports HEAD,
  *   single byte ranges (206 + Content-Range) and ETag / Last-Modified validators;
  * - /download redirects (302) to the latest release, as named by
- *   releases/latest.json, and /download/plane-text-v<n>.zip serves that release
+ *   releases/latest.json, and /download/plane-text-v<version>.zip serves that release
  *   from R2 as an attachment, with the same range support (so downloads resume);
  * - everything else is a static asset.
  *
@@ -27,7 +27,8 @@ const PREFIX = "/data/";
 const DOWNLOAD = "/download";
 /** Written by `python -m plane_text.release` after the release's zip. */
 const LATEST_RELEASE = "releases/latest.json";
-const RELEASE_FILE = /^plane-text-v\d+\.zip$/;
+/** plane-text-v<major>.<minor>.zip; the first release, v1, predates minor versions. */
+const RELEASE_FILE = /^plane-text-v\d+(\.\d+)?\.zip$/;
 
 type ByteRange = { offset: number; length: number };
 

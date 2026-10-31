@@ -1,0 +1,177 @@
+{
+  "release": "plane-text-v1.0",
+  "version": "1.0",
+  "pinned_at": "2026-10-31T13:16:20+00:00",
+  "files": [
+    {
+      "key": "processed/ecfr-title14/v2026-10-15/sections.parquet",
+      "bytes": 2960271,
+      "etag": "b0fbaab62d1c5fe1ba49e41c3a019f94"
+    },
+    {
+      "key": "processed/faa-ads/v2026-10-27/ad-final-rules.parquet",
+      "bytes": 38180780,
+      "etag": "9433a91ee30347e1f7c92a9a4b48fc87-5"
+    },
+    {
+      "key": "processed/faa-proposed-rules/v2026-10-27/ad-proposed-rules.parquet",
+      "bytes": 18870931,
+      "etag": "09e4807facc8f1bdf8c9fd9e8ce4994d-3"
+    },
+    {
+      "key": "processed/faa-proposed-rules/v2026-10-27/proposed-rules.parquet",
+      "bytes": 8822229,
+      "etag": "b289452876397c46bf125e5ae14ecb2b-2"
+    },
+    {
+      "key": "processed/faa-saibs/v2026-10-27/documents.parquet",
+      "bytes": 1563734,
+      "etag": "a85a909451a713d66d0ee26c5b7c501f"
+    },
+    {
+      "key": "processed/faa-advisory-circulars/v2026-10-24/documents.parquet",
+      "bytes": 46682851,
+      "etag": "2b2981265ca6907d207551600a7b8394-6"
+    },
+    {
+      "key": "processed/faa-maintenance-alerts/v2026-10-27/documents.parquet",
+      "bytes": 4030789,
+      "etag": "88eaca481676180cc6fe7c0f23c99d55"
+    },
+    {
+      "key": "processed/faa-sdrs/v2026-10-27/service-difficulty-reports.parquet",
+      "bytes": 166185084,
+      "etag": "8ea813090794fcf3f8eae921fb26a9fd-20"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/aircraft_make_model.parquet",
+      "bytes": 40712,
+      "etag": "dba5bd778463d571c1ece4c17dcfa5c3"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/component_make_model.parquet",
+      "bytes": 24275,
+      "etag": "6465743f76b66e9b77c803885cf0c0c2"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/engine_make_model.parquet",
+      "bytes": 11873,
+      "etag": "b08631a7926c06f8a219d823d43c7178"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/how_discovered.parquet",
+      "bytes": 1624,
+      "etag": "f32a175800f76ca0cb2d798ba4da4037"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/jasc.parquet",
+      "bytes": 41351,
+      "etag": "9a934ddf962fafcd97b75581341cf5f0"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/nature_of_condition.parquet",
+      "bytes": 1883,
+      "etag": "7d897806ed5b1f14a5d0d516092bfc48"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/part_condition.parquet",
+      "bytes": 3041,
+      "etag": "5880a06eda43effd11e66961ab79c54a"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/part_location_zone.parquet",
+      "bytes": 1654,
+      "etag": "6f472a7fac8818cfac3437500a782600"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/part_make.parquet",
+      "bytes": 24255,
+      "etag": "1d9f824f5aa08820bdc35bed40c50115"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/part_name.parquet",
+      "bytes": 11670,
+      "etag": "0ab9379c1d149be7c5d029fcdbf0bea8"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/precautionary_procedure.parquet",
+      "bytes": 1734,
+      "etag": "76a76c42099061bbc873befef9cbf843"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/propeller_make_model.parquet",
+      "bytes": 4757,
+      "etag": "50530fa47418a24d407ff0c2e8003cb0"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/sdr_type.parquet",
+      "bytes": 1485,
+      "etag": "3808760816e9b0c5def80d2c1883af24"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/stage_of_operation.parquet",
+      "bytes": 1721,
+      "etag": "43763f49f519263260c486ebed771617"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/submitter_type.parquet",
+      "bytes": 1748,
+      "etag": "164ec590dedcced968f6d746c3f7791e"
+    },
+    {
+      "key": "processed/faa-sdrs-lookups/v2026-10-27/time_since.parquet",
+      "bytes": 1454,
+      "etag": "c6316c53a154f7013781fbcff4b79f2e"
+    },
+    {
+      "key": "processed/ntsb-narratives/v2026-10-27/narratives.parquet",
+      "bytes": 84677258,
+      "etag": "6e57681581f4f8bbdd1efebcf74ede9e-11"
+    },
+    {
+      "key": "processed/ntsb-findings/v2026-10-27/events_sequence.parquet",
+      "bytes": 629787,
+      "etag": "bf9a71b6cbf24edab96bad7ab0c31817"
+    },
+    {
+      "key": "processed/ntsb-findings/v2026-10-27/findings.parquet",
+      "bytes": 884562,
+      "etag": "8e9dbe74084c40a7619d4e379379bf9e"
+    },
+    {
+      "key": "processed/ntsb-findings/v2026-10-27/occurrences.parquet",
+      "bytes": 621810,
+      "etag": "bd739eb7ca30f17a4894310a45084b95"
+    },
+    {
+      "key": "processed/ntsb-findings/v2026-10-27/sequence_of_events.parquet",
+      "bytes": 2019920,
+      "etag": "a4c61c44701c0d91b1b3a24cbd71dc2e"
+    },
+    {
+      "key": "processed/ntsb-lookups/v2026-10-27/code_sets.parquet",
+      "bytes": 14803,
+      "etag": "09b92b93ca9ec8d50513e4eec8216a92"
+    },
+    {
+      "key": "processed/ntsb-lookups/v2026-10-27/codes.parquet",
+      "bytes": 106833,
+      "etag": "b56d81b6dbcdbe70cf75632faffd93c3"
+    },
+    {
+      "key": "processed/ntsb-lookups/v2026-10-27/columns.parquet",
+      "bytes": 22384,
+      "etag": "45e442618902ac35a6c396d0edc153ea"
+    },
+    {
+      "key": "processed/ntsb-lookups/v2026-10-27/countries.parquet",
+      "bytes": 5921,
+      "etag": "121efbf003be89b418cdbf7f6fa62e9a"
+    },
+    {
+      "key": "processed/ntsb-lookups/v2026-10-27/sequence_of_events_codes.parquet",
+      "bytes": 22106,
+      "etag": "a9dcc2d6845ec6608df30701ed7dc032"
+    }
+  ]
+}
