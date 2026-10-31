@@ -12,7 +12,8 @@ interface Props {
 }
 
 const { title = site.title, description = site.description, wide = false } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+// Pages build as single files ("/shell.html"); the canonical URL drops ".html".
+const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") || "/", Astro.site);
 ---
 
 <!doctype html>

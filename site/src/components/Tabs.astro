@@ -12,7 +12,8 @@ const tabs = [
   { href: "/files", label: "Files", icon: FolderOpen },
 ];
 
-const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+// Pages build as single files, so this is "/shell.html" at build time.
+const path = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, "") || "/";
 ---
 
 <nav aria-label="Views" class="tabs">
