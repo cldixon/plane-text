@@ -1,0 +1,50 @@
+---
+/**
+ * The corpus at a glance, as a two-column spec table in a silver frame: a
+ * quiet nod to the data plates riveted to aircraft and engines.
+ */
+import { plate } from "../corpus";
+---
+
+<dl class="plate">
+  {
+    plate.map(({ key, value }) => (
+      <div>
+        <dt>{key}</dt>
+        <dd>{value}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  .plate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    margin: 0;
+    padding: var(--space-1);
+    border: var(--border-width) solid var(--color-metal);
+    border-radius: var(--radius);
+    font-family: var(--font-family-label);
+    font-size: var(--font-size-sm);
+  }
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.6rem 0.9rem;
+    border: var(--border);
+    margin: 0 -1px -1px 0;
+  }
+
+  dt {
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-family-mono);
+    text-align: right;
+  }
+</style>

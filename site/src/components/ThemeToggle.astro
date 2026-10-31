@@ -1,0 +1,93 @@
+---
+/**
+ * Switches between the dark (default) and light themes, as a single icon: a
+ * sun in dark mode (switch to light), a moon in light mode (switch to dark).
+ * The choice is kept in localStorage; BaseLayout applies it before the page
+ * paints, so there is no flash. CSS picks the icon and its label from
+ * data-theme, so both are right before any script runs.
+ */
+import { Moon, Sun } from "@lucide/astro";
+---
+
+<button type="button" class="theme-toggle" data-theme-toggle>
+  <span class="to-light">
+    <Sun size={16} stroke-width={1.75} aria-hidden="true" />
+    <span class="visually-hidden">Switch to light theme</span>
+  </span>
+  <span class="to-dark">
+    <Moon size={16} stroke-width={1.75} aria-hidden="true" />
+    <span class="visually-hidden">Switch to dark theme</span>
+  </span>
+</button>
+
+<script>
+  // Listen on the document: the client router replaces the button on every
+  // navigation, but this module runs only once.
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest("[data-theme-toggle]")) return;
+    const root = document.documentElement;
+    const theme = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // Storage can be blocked; the theme still applies to this page.
+    }
+  });
+</script>
+
+<style>
+  /* A quiet icon: muted until hovered, when it brightens over a soft round
+     fill. The visible circle is smaller than the hit area, which ::before
+     widens to the minimum touch target. */
+  .theme-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-height: 0;
+    padding: 0;
+    color: var(--color-text-muted);
+    border: 0;
+    border-radius: 50%;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .theme-toggle::before {
+    content: "";
+    position: absolute;
+    inset: calc((2.25rem - var(--target-min)) / 2);
+  }
+
+  .theme-toggle:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+
+  .to-light,
+  .to-dark {
+    display: inline-flex;
+  }
+
+  .to-dark,
+  :global([data-theme="light"]) .to-light {
+    display: none;
+  }
+
+  :global([data-theme="light"]) .to-dark {
+    display: inline-flex;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

@@ -7,6 +7,9 @@
       "dependencies": {
         "@astrojs/svelte": "^9.1.1",
         "@duckdb/duckdb-wasm": "1.33.1-dev57.0",
+        "@fontsource/b612": "^5.3.0",
+        "@fontsource/b612-mono": "^5.3.0",
+        "@lucide/astro": "^1.65.0",
         "astro": "^7.4.2",
         "svelte": "^5.57.2",
       },
@@ -113,6 +116,10 @@
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g=="],
 
+    "@fontsource/b612": ["@fontsource/b612@5.3.0", "", {}, "sha512-2AQPrSFDI9K00w/lPlgfcqve+ZPdRSCttvVUxcmv+UrnwwaKLMym+/uXmM7+dgPCVBIV9omoXUabFoyBFpc1Vg=="],
+
+    "@fontsource/b612-mono": ["@fontsource/b612-mono@5.3.0", "", {}, "sha512-G0Ihm+ekqqP5PZJ1zrx6GbeS2q4GDmYnM01zrNrPARRg64GoG0D2pTf+FsbDWvbg/9tVWFRmFIz8xYLjgFrUpg=="],
+
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
     "@img/sharp-darwin-arm64": ["@img/sharp-darwin-arm64@0.35.5", "", { "optionalDependencies": { "@img/sharp-libvips-darwin-arm64": "1.3.4" }, "os": "darwin", "cpu": "arm64" }, "sha512-QRUlFQ0WxvdWyqqG/WtI3iupfD5rBzmCHXSdPsY91sAtVtTo7Q4cb6zOccZ3gqEqkr0f1As1ehLqmEpDsRf+lg=="],
@@ -176,6 +183,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.6.0", "", {}, "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@lucide/astro": ["@lucide/astro@1.65.0", "", { "peerDependencies": { "astro": "^4 || ^5 || ^6 || ^7" } }, "sha512-usIPvsiPHtccGt0bSod9xE+ZmbWUyNqtGF+2O32jKuVr4/e+lmfJrGRNHaf3Zud2pVNHx9hzz8r8o0HVy2RNTg=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.4", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || ^2.0.0-alpha.4", "@emnapi/runtime": "^1.7.1 || ^2.0.0-alpha.4" } }, "sha512-AJxoUD2/15ESHbvpcyjU274nsAPLuOtPHCk0vKJM5pj//Fg/B1FXNWjPnXTT9PymCYYiHo4zPj0ZomXBKhoy7g=="],
 

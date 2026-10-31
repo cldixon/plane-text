@@ -1,5 +1,8 @@
 ---
 import "@design/index.css";
+import { ClientRouter } from "astro:transitions";
+import ThemeToggle from "@components/ThemeToggle.astro";
+import serifUrl from "@design/fonts/source-serif-4-roman.woff2?url";
 import { site } from "../site";
 
 interface Props {
@@ -10,7 +13,8 @@ interface Props {
 }
 
 const { title = site.title, description = site.description, wide = false } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+// Pages build as single files ("/shell.html"); the canonical URL drops ".html".
+const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") || "/", Astro.site);
 ---
 
 <!doctype html>
@@ -21,8 +25,30 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="preload" href={serifUrl} as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      // Apply a saved light theme before the page paints; dark is the default.
+      // The client router swaps <html> attributes on navigation, so apply it
+      // again after every swap.
+      (() => {
+        const apply = (doc) => {
+          try {
+            if (localStorage.getItem("theme") === "light") doc.documentElement.dataset.theme = "light";
+          } catch {}
+        };
+        apply(document);
+        if (!window.__themeOnSwap) {
+          window.__themeOnSwap = true;
+          document.addEventListener("astro:before-swap", (event) => apply(event.newDocument));
+        }
+      })();
+    </script>
+    <ClientRouter />
   </head>
   <body>
+    <header>
+      <ThemeToggle />
+    </header>
     <main class:list={{ wide }}>
       <slot />
     </main>
@@ -30,10 +56,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <style>
+  header {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--space-3) var(--gutter);
+  }
+
   main {
     max-width: var(--measure);
     margin: 0 auto;
-    padding: var(--space-5) var(--gutter);
+    padding: var(--space-4) var(--gutter) var(--space-5);
   }
 
   main.wide {

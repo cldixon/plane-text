@@ -5,6 +5,9 @@ import svelte from "@astrojs/svelte";
 export default defineConfig({
   site: "https://plane-text.cldixon.dev",
   integrations: [svelte()],
-  // The explorer moved onto the home page.
-  redirects: { "/explore": "/#explore" },
+  // Build each page as one file (shell.html), so Cloudflare serves /shell
+  // as is, rather than redirecting it to /shell/.
+  build: { format: "file" },
+  // The explorer became the Shell tab.
+  redirects: { "/explore": "/shell" },
 });

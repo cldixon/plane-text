@@ -1,3 +1,7 @@
 /* The design system's entry point. Import this once, in the base layout. */
+@import "@fontsource/b612-mono/400.css";
+@import "@fontsource/b612/400.css";
+@import "@fontsource/b612/700.css";
+@import "./fonts.css";
 @import "./tokens.css";
 @import "./base.css";

@@ -1,62 +1,36 @@
 ---
-import BaseLayout from "@layouts/BaseLayout.astro";
-import SqlViewer from "@components/SqlViewer.svelte";
-import { datasets, links, site } from "../site";
+import SiteLayout from "@layouts/SiteLayout.astro";
+import BarChart, { type Bar } from "@components/BarChart.astro";
+import DataPlate from "@components/DataPlate.astro";
+import { datasets, formatCount } from "../corpus";
 
-/** Served from the private R2 bucket by the Worker in site/cloudflare/src. */
-const src = "/data/processed/faa-ads/v2026-10-23/ad-final-rules.parquet";
-
-const initialQuery = `SELECT ad_number, effective_date, status, make, subject
-FROM ads
-ORDER BY effective_date DESC
-LIMIT 100`;
-
-const examples = [
-  { label: "Latest ADs", query: initialQuery },
-  {
-    label: "ADs per year",
-    query: `SELECT year(effective_date) AS year, count(*) AS ads
-FROM ads
-WHERE effective_date IS NOT NULL
-GROUP BY year
-ORDER BY year DESC`,
-  },
-  {
-    label: "Most-cited manufacturers",
-    query: `SELECT manufacturer, count(*) AS ads
-FROM (SELECT unnest(make) AS manufacturer FROM ads)
-GROUP BY manufacturer
-ORDER BY ads DESC
-LIMIT 25`,
-  },
-  {
-    label: "Search subjects",
-    query: `SELECT ad_number, effective_date, make, subject
-FROM ads
-WHERE subject ILIKE '%landing gear%'
-ORDER BY effective_date DESC
-LIMIT 100`,
-  },
-  { label: "Columns", query: "DESCRIBE ads" },
+// Records per dataset, on a log scale from 100 to 2 million: the service
+// difficulty reports would otherwise flatten every other bar.
+const [logMin, logMax] = [2, Math.log10(2e6)];
+const logAt = (n: number) => (Math.log10(n) - logMin) / (logMax - logMin);
+const recordBars: Bar[] = datasets
+  .filter((d) => d.rows !== null)
+  .sort((a, b) => (b.rows ?? 0) - (a.rows ?? 0))
+  .map((d) => ({ label: d.name, from: 0, to: logAt(d.rows ?? 1), value: formatCount(d.rows ?? 0, d.approximate) }));
+const recordTicks = [
+  { at: logAt(100), label: "100" },
+  { at: logAt(1e4), label: "10k" },
+  { at: logAt(1e6), label: "1M" },
 ];
+
+// Years covered, for the datasets whose span is known.
+const [yearMin, yearMax] = [1940, 2030];
+const yearAt = (y: number) => (y - yearMin) / (yearMax - yearMin);
+const spanBars: Bar[] = datasets
+  .flatMap((d) => (d.span ? [{ name: d.name, span: d.span }] : []))
+  .sort((a, b) => a.span[0] - b.span[0])
+  .map(({ name, span }) => ({ label: name, from: yearAt(span[0]), to: yearAt(span[1]), value: span.join("–") }));
+const yearTicks = [1940, 1980, 2020].map((y) => ({ at: yearAt(y), label: String(y) }));
 ---
 
-<BaseLayout>
-  <header class="prose">
-    <h1>{site.title}</h1>
-    <p class="lede">An open corpus of aviation maintenance text, built only from public sources.</p>
-    <nav aria-label="Project links">
-      {links.map((link, i) => (
-        <>
-          {i > 0 && " · "}
-          <a href={link.href}>{link.label}</a>
-        </>
-      ))}
-    </nav>
-  </header>
-
-  <section class="prose" aria-labelledby="overview">
-    <h2 id="overview">Overview</h2>
+<SiteLayout>
+  <section aria-labelledby="abstract">
+    <h2 id="abstract">Abstract</h2>
     <p>
       Aircraft maintenance runs on text: the regulations that govern it, the airworthiness directives that order
       inspections and repairs, the bulletins and advisory circulars that explain them, and the reports mechanics and
@@ -64,117 +38,39 @@ LIMIT 100`,
       little of it is available for open research.
     </p>
     <p>
-      Plane-text gathers the public side of it from the FAA, the eCFR and the NTSB, cleans it, and publishes it as
+      Plane-text gathers the public side of it from the <abbr title="Federal Aviation Administration">FAA</abbr>, the <abbr title="Electronic Code of Federal Regulations">eCFR</abbr> and the <abbr title="National Transportation Safety Board">NTSB</abbr>, cleans it, and publishes it as
       versioned datasets: the same kinds of documents a maintenance organization works with, ready for search,
       analysis and language models.
     </p>
   </section>
 
-  <section class="prose" aria-labelledby="explore">
-    <h2 id="explore">Explore</h2>
-    <p>
-      Query the FAA airworthiness directives with SQL, right here. The query runs in your browser with <a
-        href="https://duckdb.org/docs/api/wasm/overview">DuckDB-WASM</a>, which reads only the parts of the parquet
-      file it needs. The table is <code>ads</code>, one row per directive.
-    </p>
-    <SqlViewer client:only="svelte" {src} view="ads" {initialQuery} {examples} />
+  <section aria-labelledby="data-plate" class="corpus">
+    <h2 id="data-plate">Data plate</h2>
+    <DataPlate />
+    <BarChart caption="Records per dataset" note="log scale" bars={recordBars} ticks={recordTicks} />
+    <BarChart caption="Coverage by year" bars={spanBars} ticks={yearTicks} />
   </section>
-
-  <section class="prose" aria-labelledby="datasets">
-    <h2 id="datasets">Datasets</h2>
-    <p>Each dataset is published as dated snapshots of parquet files.</p>
-    <dl>
-      {
-        datasets.map((dataset) => (
-          <>
-            <dt>
-              {dataset.title} <code>{dataset.name}</code>
-            </dt>
-            <dd>
-              {dataset.size}. Source: {dataset.source}.{dataset.note && ` ${dataset.note}`}
-            </dd>
-          </>
-        ))
-      }
-    </dl>
-  </section>
-
-  <section class="prose" aria-labelledby="how">
-    <h2 id="how">How it is built</h2>
-    <p>
-      Every dataset comes in two layers. <strong>Raw</strong> is the source as delivered, converted to parquet with its
-      own field names and nothing changed. <strong>Processed</strong> is built only from raw: cleaned, typed, one row
-      per document or report, with coded fields decoded into readable labels next to their codes. Each file records
-      where it came from and when.
-    </p>
-    <p>
-      The pipelines are Python, and they run on Cloudflare: each run starts a container that fetches its source and
-      writes both layers to storage. The code is on <a href="https://github.com/cldixon/plane-text">GitHub</a>.
-    </p>
-  </section>
-
-  <section class="prose" aria-labelledby="status">
-    <h2 id="status">Status</h2>
-    <p>
-      Early and changing. The datasets above are built and stored; for now you can query the airworthiness
-      directives here. Downloads, scheduled updates, more sources (EASA, NASA ASRS and Transport Canada among them)
-      and a data license are next. All sources are US government works or other public records.
-    </p>
-  </section>
-
-  <footer class="prose">
-    <nav aria-label="Project links">
-      {links.map((link, i) => (
-        <>
-          {i > 0 && " · "}
-          <a href={link.href}>{link.label}</a>
-        </>
-      ))}
-    </nav>
-  </footer>
-</BaseLayout>
+</SiteLayout>
 
 <style>
-  /* Text blocks sit in a centered column; headings, header and footer are
-     centered too, while paragraphs stay left-aligned for reading. */
-  .prose {
-    max-width: var(--measure);
-    margin-inline: auto;
-  }
-
-  header,
-  h2,
-  footer {
-    text-align: center;
-  }
-
-  section,
-  footer {
+  section + section {
     margin-top: var(--space-5);
   }
 
-  .lede {
-    font-size: var(--font-size-lg);
-  }
-
-  dt {
-    margin-top: var(--space-3);
-    font-weight: var(--font-weight-bold);
-  }
-
-  dt code {
+  h2 {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-family-label);
+    font-size: var(--font-size-h2);
     font-weight: var(--font-weight-normal);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
   }
 
-  dd {
+  .corpus {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .corpus h2 {
     margin: 0;
-  }
-
-  footer {
-    color: var(--color-text-muted);
-    border-top: var(--border);
-    padding-top: var(--space-3);
   }
 </style>

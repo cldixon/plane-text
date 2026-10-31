@@ -1,0 +1,68 @@
+---
+/**
+ * Every page of the site: the masthead (title, tagline, link badges) and the
+ * tab bar stay the same, and each tab is its own page below them. The client
+ * router in BaseLayout swaps only what changes, so switching tabs does not
+ * reload the page.
+ */
+import BaseLayout from "@layouts/BaseLayout.astro";
+import Badge from "@components/Badge.astro";
+import Tabs from "@components/Tabs.astro";
+import { badges, site } from "../site";
+
+interface Props {
+  /** The page title, after the site title. Omit on the home page. */
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<BaseLayout title={title ? `${title} · ${site.title}` : site.title}>
+  <div class="masthead">
+    <h1><a href="/">{site.title}</a></h1>
+    <p class="tagline">{site.tagline}</p>
+    <nav aria-label="Project links">
+      {badges.map((badge) => <Badge {...badge} />)}
+    </nav>
+  </div>
+  <Tabs />
+  <slot />
+</BaseLayout>
+
+<style>
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-display);
+    font-weight: var(--font-weight-normal);
+  }
+
+  h1 a,
+  h1 a:visited {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .tagline {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+</style>
