@@ -11,9 +11,13 @@ import argparse
 import os
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import boto3
 import polars as pl
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
 
 DEFAULT_BUCKET = "plane-text"
 
@@ -76,11 +80,32 @@ def object_key(path: Path, data_dir: Path) -> str:
     return path.relative_to(data_dir).as_posix()
 
 
-def upload(path: Path, data_dir: Path) -> str:
+def client() -> S3Client:
+    return boto3.client("s3", endpoint_url=os.environ["S3_API_ENDPOINT"], region_name="auto")
+
+
+def upload(path: Path, data_dir: Path, content_type: str | None = None) -> str:
     key = object_key(path, data_dir)
-    s3 = boto3.client("s3", endpoint_url=os.environ["S3_API_ENDPOINT"], region_name="auto")
-    s3.upload_file(str(path), bucket(), key)
+    extra = {"ContentType": content_type} if content_type else None
+    client().upload_file(str(path), bucket(), key, ExtraArgs=extra)
     return key
+
+
+def list_objects(prefix: str) -> dict[str, int]:
+    """Every key in the bucket under `prefix`, with its size in bytes."""
+    objects: dict[str, int] = {}
+    for page in client().get_paginator("list_objects_v2").paginate(Bucket=bucket(), Prefix=prefix):
+        for item in page.get("Contents", []):
+            objects[item["Key"]] = item["Size"]
+    return objects
+
+
+def download(key: str, data_dir: Path) -> Path:
+    """Downloads `key` to the same path under the data directory."""
+    path = data_dir / key
+    path.parent.mkdir(parents=True, exist_ok=True)
+    client().download_file(bucket(), key, str(path))
+    return path
 
 
 def parse_args(parser: argparse.ArgumentParser) -> argparse.Namespace:

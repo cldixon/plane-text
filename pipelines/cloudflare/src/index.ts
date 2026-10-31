@@ -3,6 +3,8 @@
  *
  *   POST /runs/<pipeline>[?snapshot=YYYY-MM-DD]   start a run (202), or 409 if one is running;
  *                                                 the snapshot defaults to today (UTC)
+ *   POST /runs/release?release=<n>                publish release plane-text-v<n> (required, and
+ *                                                 above every published release)
  *   GET  /runs/<pipeline>                         the latest runs, newest first
  *   DELETE /runs/<pipeline>                       stop the current run (its container is destroyed)
  *
@@ -28,6 +30,8 @@ type Pipeline = {
 	instance: "standard-1" | "standard-2" | "standard-3" | "standard-4";
 	/** A run still going after this long is stopped and recorded as failed. */
 	maxHours: number;
+	/** Needs `?release=<n>`, passed to every step as `--release <n>`. */
+	release?: boolean;
 };
 
 /**
@@ -62,17 +66,28 @@ const PIPELINES: Record<string, Pipeline> = {
 		instance: "standard-4",
 		maxHours: 1,
 	},
+	// The last step, run by hand: the newest snapshot of every processed dataset in R2,
+	// zipped as plane-text-v<n> (about 400 MB) and published under releases/.
+	release: { steps: [{ module: "release" }], instance: "standard-2", maxHours: 1, release: true },
 };
 
 /**
  * The container's command: each step in turn, stopping at the first that fails.
  * Every step gets the same snapshot, so a run that crosses midnight UTC stays one version.
  */
-function command(pipeline: Pipeline, snapshot: string): string[] {
+function command(pipeline: Pipeline, snapshot: string, release: number | null): string[] {
+	const extra = release === null ? [] : ["--release", String(release)];
 	const steps = pipeline.steps.map((step) =>
-		["python", "-m", `plane_text.${step.module}`, ...(step.args ?? []), "--upload", "--snapshot", snapshot].join(
-			" ",
-		),
+		[
+			"python",
+			"-m",
+			`plane_text.${step.module}`,
+			...(step.args ?? []),
+			...extra,
+			"--upload",
+			"--snapshot",
+			snapshot,
+		].join(" "),
 	);
 	return steps.length === 1 ? steps[0]!.split(" ") : ["sh", "-c", `set -e; ${steps.join("; ")}`];
 }
@@ -93,6 +108,7 @@ type Run = {
 	command: string[];
 	instance: string;
 	snapshot: string;
+	release?: number;
 	state: "running" | "succeeded" | "failed" | "cancelled";
 	startedAt: string;
 	finishedAt?: string;
@@ -103,7 +119,11 @@ export class PipelineRun extends DurableObject<Env> {
 	/** The run whose container exit this instance is waiting on. Lost if the object restarts. */
 	private watching: string | undefined;
 
-	async start(pipeline: string, snapshot: string | null): Promise<{ started: boolean; run: Run }> {
+	async start(
+		pipeline: string,
+		snapshot: string | null,
+		release: number | null,
+	): Promise<{ started: boolean; run: Run }> {
 		const container = this.ctx.container!;
 		const runs = await this.runs();
 		if (runs[0]?.state === "running" && container.running) return { started: false, run: runs[0] };
@@ -113,9 +133,10 @@ export class PipelineRun extends DurableObject<Env> {
 		const run: Run = {
 			id: crypto.randomUUID(),
 			pipeline,
-			command: command(spec, date),
+			command: command(spec, date, release),
 			instance: spec.instance,
 			snapshot: date,
+			...(release === null ? {} : { release }),
 			state: "running",
 			startedAt: new Date().toISOString(),
 		};
@@ -233,11 +254,17 @@ export default {
 			return run ? json(run) : json({ error: "no run in progress" }, 409);
 		}
 		if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
-		const snapshot = new URL(request.url).searchParams.get("snapshot");
+		const params = new URL(request.url).searchParams;
+		const snapshot = params.get("snapshot");
 		if (snapshot !== null && !/^\d{4}-\d{2}-\d{2}$/.test(snapshot)) {
 			return json({ error: "snapshot must be YYYY-MM-DD" }, 400);
 		}
-		const { started, run } = await runner.start(pipeline, snapshot);
+		const releaseParam = params.get("release");
+		if (PIPELINES[pipeline]!.release && !/^[1-9]\d{0,5}$/.test(releaseParam ?? "")) {
+			return json({ error: "release must be a release number: ?release=<n>" }, 400);
+		}
+		const release = PIPELINES[pipeline]!.release ? Number(releaseParam) : null;
+		const { started, run } = await runner.start(pipeline, snapshot, release);
 		return json(run, started ? 202 : 409);
 	},
 } satisfies ExportedHandler<Env>;

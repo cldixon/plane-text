@@ -71,6 +71,31 @@ Processed steps need none of these: they read raw parquet only.
 
 Every pipeline but the advisory circulars also runs on Cloudflare: a Worker starts it in a Container, which uploads to R2 the same way. See `pipelines/cloudflare/README.md`.
 
+## Releases
+
+The pipelines keep refreshing `processed/` under dated snapshots; a release freezes the corpus as one numbered zip, `plane-text-v<n>.zip`, which is what the site's download serves and what a Hugging Face dataset repo will hold (unzipped). The last step of the pipeline, run by hand when a new version is worth cutting:
+
+```sh
+uv run python -m plane_text.release --release 1              # build data/releases/plane-text-v1.zip from R2
+uv run python -m plane_text.release --release 1 --upload     # ...and publish it
+uv run python -m plane_text.release --release 1 --source local   # from data/processed instead of R2
+```
+
+It takes the newest snapshot of every processed dataset in R2 (no raw data) and lays them out as:
+
+```
+plane-text-v<n>/
+  README.md        dataset card: contents, layout, provenance, license, citation; its YAML front matter
+                   declares each table as a Hugging Face config
+  LICENSE          CC BY 4.0
+  manifest.json    every file: dataset, table, snapshot, rows, columns, bytes, sha256, source key
+  data/<dataset>/<table>.parquet
+```
+
+Parquet is stored in the zip uncompressed (it already is, with zstd). Publishing uploads `releases/plane-text-v<n>.zip`, then `releases/latest.json`, which points at it. Release numbers only go up: publishing a number at or below an existing release is refused.
+
+Releases are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the underlying texts are US federal government works.
+
 ## Site
 
 The landing page lives in `site/`: Astro with Svelte and TypeScript, served as static assets on Cloudflare Workers at `plane-text.cldixon.dev` (the old `planetext.cldixon.dev` redirects there). Requires [Bun](https://bun.sh); Astro runs on the Bun runtime.
@@ -89,6 +114,6 @@ Deployment uses Cloudflare's [`cf`](https://github.com/cloudflare/cf) CLI (beta)
 
 Deploys run in GitHub Actions (`.github/workflows/site.yml`) whenever the site changes: a push to `main` deploys to production, and a pull request gets a preview version (uploaded, not deployed) at `https://pr-<number>-plane-text.cl-dixon.workers.dev`, posted as a comment on the pull request. The workflow needs the repository secrets `CLOUDFLARE_API_TOKEN` (a token from Cloudflare's "Edit Cloudflare Workers" template, for this account and the `cldixon.dev` zone) and `CLOUDFLARE_ACCOUNT_ID`; without them it skips the deploy with a warning. `bun run deploy` and `bun run deploy:preview` still work by hand.
 
-The site is laid out like a project README: the title, a tagline and link badges, then three tabs that share that header, each its own page: Overview (`/`: the abstract, a data plate and charts of the corpus), Shell (`/shell`: an in-browser SQL shell) and Files (`/files`: an index of the bucket's datasets). Astro's client router switches tabs without reloading the page; a dark/light theme toggle sits top right (dark by default). The corpus figures live in `site/src/corpus.ts`. The shell runs DuckDB-WASM (loaded from jsDelivr) over the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
+The site is laid out like a project README: the title, a tagline and link badges, then two tabs that share that header, each its own page: Overview (`/`: the abstract, a data plate and charts of the corpus) and Shell (`/shell`: an in-browser SQL shell). At the right of the tab bar, Download fetches the latest release (`/download`, which the Worker redirects to `/download/plane-text-v<n>.zip`, served from R2). Astro's client router switches tabs without reloading the page; a dark/light theme toggle sits top right (dark by default). The corpus figures live in `site/src/corpus.ts`. The shell runs DuckDB-WASM (loaded from jsDelivr) over the airworthiness directives parquet, which a small Worker serves from the private R2 bucket at `/data/*` with HTTP Range requests. See `site/cloudflare/README.md`, including how to seed the local R2 bucket for `bun run preview`.
 
 Design tokens (colors, type, space) live in `site/src/design/tokens.css`; see `site/src/design/README.md`.

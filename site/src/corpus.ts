@@ -1,6 +1,6 @@
 /**
  * What the corpus holds, for the Overview's data plate and charts and the
- * Files index. Counts and year spans are those of the latest snapshot, as
+ * shell. Counts and year spans are those of the latest snapshot, as
  * reported by the pipelines; a null means not counted yet.
  */
 
@@ -30,21 +30,6 @@ export const datasets: Dataset[] = [
   { name: "ntsb-findings", title: "Accident findings and event sequences", rows: null },
 ];
 
-/** Every folder under processed/ in the bucket, lookup tables included. */
-export const processedFolders: string[] = [
-  "ecfr-title14",
-  "faa-ads",
-  "faa-proposed-rules",
-  "faa-saibs",
-  "faa-advisory-circulars",
-  "faa-maintenance-alerts",
-  "faa-sdrs",
-  "faa-sdrs-lookups",
-  "ntsb-narratives",
-  "ntsb-findings",
-  "ntsb-lookups",
-];
-
 /** Tables the shell can query today; the rest are listed as coming. */
 export const shellTables = [
   { name: "ads", dataset: "faa-ads", src: `/data/processed/faa-ads/v${snapshot}/ad-final-rules.parquet` },
@@ -68,7 +53,7 @@ const counted = datasets.filter((d) => d.rows !== null);
 const records = counted.reduce((sum, d) => sum + (d.rows ?? 0), 0);
 const spans = datasets.flatMap((d) => d.span ?? []);
 
-/** The data plate's fields. Tokens and the license are not decided yet. */
+/** The data plate's fields. Tokens are not counted yet. */
 export const plate: { key: string; value: string }[] = [
   { key: "Snapshot", value: snapshot },
   { key: "Datasets", value: String(datasets.length) },
@@ -77,5 +62,5 @@ export const plate: { key: string; value: string }[] = [
   { key: "Sources", value: "FAA · eCFR · NTSB" },
   { key: "Span", value: `${Math.min(...spans)}–${Math.max(...spans)}` },
   { key: "Format", value: "Parquet" },
-  { key: "License", value: "—" },
+  { key: "License", value: "CC BY 4.0" },
 ];
