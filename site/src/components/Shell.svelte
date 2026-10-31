@@ -42,6 +42,11 @@
 
   const pickedRows = $derived(tables.find((t) => t.name === picked)?.rows ?? "");
 
+  /** Puts the cursor at the prompt; the console calls this when it opens. */
+  export function focus(): void {
+    field?.focus();
+  }
+
   onMount(() => {
     openDuckDB(tables)
       .then((s) => {
@@ -239,15 +244,16 @@
 </div>
 
 <style>
+  /* Fills its container (the console), and takes its look from the
+     --console-* tokens. */
   .shell {
-    border: var(--border-strong);
-    border-radius: var(--radius);
-    font-family: var(--font-family-terminal);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    font-family: var(--console-font);
     font-size: var(--font-size-sm);
-  }
-
-  .shell:focus-within {
-    border-color: var(--color-text);
+    color: var(--console-text);
   }
 
   .toolbar {
@@ -256,14 +262,14 @@
     align-items: center;
     gap: var(--space-2) var(--space-3);
     padding: var(--space-2) var(--space-3);
-    border-bottom: var(--border);
-    font-family: var(--font-family-label);
+    border-bottom: var(--border-width) solid var(--console-border);
+    font-family: var(--console-font-label);
   }
 
   .toolbar label,
   .muted,
   .prompt {
-    color: var(--color-text-muted);
+    color: var(--console-text-muted);
   }
 
   select {
@@ -271,18 +277,19 @@
     min-height: 2rem;
     padding: 0 var(--space-2);
     font: inherit;
-    font-family: var(--font-family-mono);
-    color: var(--color-text);
-    background: var(--color-background);
-    border: var(--border-strong);
-    border-radius: var(--radius);
+    font-family: var(--console-font);
+    color: var(--console-text);
+    background: var(--console-background);
+    border: var(--border-width) solid var(--console-border);
+    border-radius: var(--console-radius);
   }
 
   .screen {
-    height: var(--shell-height);
+    flex: 1;
+    min-height: 0;
     overflow: auto;
     padding: var(--space-3);
-    background: var(--color-surface);
+    background: var(--console-surface);
     line-height: 1.55;
   }
 
@@ -291,7 +298,7 @@
   }
 
   .error {
-    color: var(--color-error);
+    color: var(--console-error);
     white-space: pre-wrap;
   }
 
@@ -317,16 +324,16 @@
     padding: 0;
     font: inherit;
     line-height: inherit;
-    color: var(--color-text);
+    color: var(--console-text);
     background: transparent;
     border: 0;
     outline: none;
     resize: none;
-    caret-color: var(--color-text);
+    caret-color: var(--console-accent);
   }
 
   textarea::placeholder {
-    color: var(--color-text-muted);
+    color: var(--console-text-muted);
     opacity: 0.6;
   }
 </style>

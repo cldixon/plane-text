@@ -1,6 +1,6 @@
 ---
 import "@design/index.css";
-import { ClientRouter } from "astro:transitions";
+import DownloadButton from "@components/DownloadButton.astro";
 import ThemeToggle from "@components/ThemeToggle.astro";
 import serifUrl from "@design/fonts/source-serif-4-roman.woff2?url";
 import { site } from "../site";
@@ -28,25 +28,14 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") ||
     <link rel="preload" href={serifUrl} as="font" type="font/woff2" crossorigin />
     <script is:inline>
       // Apply a saved light theme before the page paints; dark is the default.
-      // The client router swaps <html> attributes on navigation, so apply it
-      // again after every swap.
-      (() => {
-        const apply = (doc) => {
-          try {
-            if (localStorage.getItem("theme") === "light") doc.documentElement.dataset.theme = "light";
-          } catch {}
-        };
-        apply(document);
-        if (!window.__themeOnSwap) {
-          window.__themeOnSwap = true;
-          document.addEventListener("astro:before-swap", (event) => apply(event.newDocument));
-        }
-      })();
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.dataset.theme = "light";
+      } catch {}
     </script>
-    <ClientRouter />
   </head>
   <body>
     <header>
+      <DownloadButton />
       <ThemeToggle />
     </header>
     <main class:list={{ wide }}>
@@ -58,7 +47,9 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") ||
 <style>
   header {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: var(--space-2);
     padding: var(--space-3) var(--gutter);
   }
 

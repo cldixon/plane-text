@@ -1,13 +1,13 @@
 ---
 /**
- * Every page of the site: the masthead (title, tagline, link badges) and the
- * tab bar stay the same, and each tab is its own page below them. The client
- * router in BaseLayout swaps only what changes, so switching tabs does not
- * reload the page.
+ * The site's page: the masthead (title, tagline, link badges), the paper
+ * below it, and the query console, a floating Query button that opens the
+ * SQL shell over the page.
  */
 import BaseLayout from "@layouts/BaseLayout.astro";
 import Badge from "@components/Badge.astro";
-import Tabs from "@components/Tabs.astro";
+import QueryConsole from "@components/QueryConsole.svelte";
+import { datasets, formatCount, shellPlaceholder, shellSample, shellTables } from "../corpus";
 import { badges, site } from "../site";
 
 interface Props {
@@ -16,6 +16,12 @@ interface Props {
 }
 
 const { title } = Astro.props;
+
+const tables = shellTables.map((table) => {
+  const dataset = datasets.find((d) => d.name === table.dataset);
+  return { name: table.name, src: table.src, rows: dataset?.rows ? formatCount(dataset.rows) : "" };
+});
+const soon = datasets.map((d) => d.name).filter((name) => !shellTables.some((t) => t.dataset === name));
 ---
 
 <BaseLayout title={title ? `${title} · ${site.title}` : site.title}>
@@ -26,8 +32,8 @@ const { title } = Astro.props;
       {badges.map((badge) => <Badge {...badge} />)}
     </nav>
   </div>
-  <Tabs />
   <slot />
+  <QueryConsole client:load {tables} {soon} sample={shellSample} placeholder={shellPlaceholder} />
 </BaseLayout>
 
 <style>
