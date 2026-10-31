@@ -7,7 +7,6 @@
       "dependencies": {
         "@astrojs/svelte": "^9.1.1",
         "@duckdb/duckdb-wasm": "1.33.1-dev57.0",
-        "@fontsource-variable/source-serif-4": "^5.3.1",
         "@fontsource/b612": "^5.3.0",
         "@fontsource/b612-mono": "^5.3.0",
         "@lucide/astro": "^1.65.0",
@@ -116,8 +115,6 @@
     "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g=="],
-
-    "@fontsource-variable/source-serif-4": ["@fontsource-variable/source-serif-4@5.3.1", "", {}, "sha512-4Rtay22SC4lMvw11r/+9kxANB6P3M0X8s1NudBC2v0J1KU2y3DcMoNcT3lBoZ/CqLirzf+StlO6UlJilyrvaUg=="],
 
     "@fontsource/b612": ["@fontsource/b612@5.3.0", "", {}, "sha512-2AQPrSFDI9K00w/lPlgfcqve+ZPdRSCttvVUxcmv+UrnwwaKLMym+/uXmM7+dgPCVBIV9omoXUabFoyBFpc1Vg=="],
 

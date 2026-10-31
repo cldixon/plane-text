@@ -30,6 +30,14 @@ p {
   font-variant-numeric: oldstyle-nums;
 }
 
+/* Acronyms in running text are set in the serif's real small caps, so
+   jargon-heavy prose stays even; the title spells each one out. */
+abbr {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
 h1,
 h2,
 h3 {

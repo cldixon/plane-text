@@ -22,8 +22,8 @@
   /* Typography: a paper with an instrument panel inside it. Source Serif 4
      (with optical sizes) for reading; B612, drawn for Airbus cockpit
      displays, for headings, labels and controls; B612 Mono for the wordmark,
-     data values and names. All self-hosted from @fontsource, see index.css. */
-  --font-family-body: "Source Serif 4 Variable", "Source Serif Pro", Georgia, serif;
+     data values and names. All self-hosted, see index.css and fonts.css. */
+  --font-family-body: "Source Serif 4", "Source Serif Pro", Georgia, serif;
   --font-family-label: "B612", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-family-mono: "B612 Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   /* The shell uses the system's monospace: B612 Mono has no box-drawing

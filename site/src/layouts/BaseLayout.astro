@@ -2,6 +2,7 @@
 import "@design/index.css";
 import { ClientRouter } from "astro:transitions";
 import ThemeToggle from "@components/ThemeToggle.astro";
+import serifUrl from "@design/fonts/source-serif-4-roman.woff2?url";
 import { site } from "../site";
 
 interface Props {
@@ -24,6 +25,7 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") ||
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="preload" href={serifUrl} as="font" type="font/woff2" crossorigin />
     <script is:inline>
       // Apply a saved light theme before the page paints; dark is the default.
       // The client router swaps <html> attributes on navigation, so apply it
