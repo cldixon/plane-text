@@ -1,14 +1,15 @@
 ---
 /**
- * The site's page: the masthead (title, tagline, link badges), the paper
+ * The site's page: the masthead (title, tagline, a row of links, Download
+ * first), the paper
  * below it, and the query console, a floating Query button that opens the
  * SQL shell over the page.
  */
 import BaseLayout from "@layouts/BaseLayout.astro";
-import Badge from "@components/Badge.astro";
+import { Download } from "@lucide/astro";
 import QueryConsole from "@components/QueryConsole.svelte";
 import { datasets, formatCount, shellPlaceholder, shellSample, shellTables } from "../corpus";
-import { badges, site } from "../site";
+import { links, site } from "../site";
 
 interface Props {
   /** The page title, after the site title. Omit on the home page. */
@@ -29,7 +30,22 @@ const soon = datasets.map((d) => d.name).filter((name) => !shellTables.some((t) 
     <h1><a href="/">{site.title}</a></h1>
     <p class="tagline">{site.tagline}</p>
     <nav aria-label="Project links">
-      {badges.map((badge) => <Badge {...badge} />)}
+      <ul>
+        {
+          links.map(({ label, href, download }) => (
+            <li>
+              {href ? (
+                <a href={href} download={download || undefined} class:list={{ primary: download }}>
+                  {download && <Download size={14} stroke-width={1.75} aria-hidden="true" />}
+                  {label}
+                </a>
+              ) : (
+                <span class="soon">{label} (soon)</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
     </nav>
   </div>
   <slot />
@@ -65,10 +81,59 @@ const soon = datasets.map((d) => d.name).filter((name) => !shellTables.some((t) 
     color: var(--color-text-muted);
   }
 
-  nav {
+  /* One quiet line of links, separated by middle dots. */
+  ul {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--space-2);
+    gap: var(--space-1) 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-family-label);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  li + li::before {
+    content: "·";
+    margin: 0 0.6em;
+  }
+
+  /* Where the row may wrap, spacing instead of dots, so no line starts with one. */
+  @media (max-width: 30rem) {
+    ul {
+      gap: var(--space-1) var(--space-4);
+    }
+
+    li + li::before {
+      content: none;
+    }
+  }
+
+  a,
+  a:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  a:hover,
+  a:focus-visible,
+  a.primary,
+  a.primary:visited {
+    color: var(--color-text);
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .soon {
+    opacity: 0.7;
   }
 </style>

@@ -1,6 +1,5 @@
 ---
 import "@design/index.css";
-import DownloadButton from "@components/DownloadButton.astro";
 import ThemeToggle from "@components/ThemeToggle.astro";
 import serifUrl from "@design/fonts/source-serif-4-roman.woff2?url";
 import { site } from "../site";
@@ -35,7 +34,6 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") ||
   </head>
   <body>
     <header>
-      <DownloadButton />
       <ThemeToggle />
     </header>
     <main class:list={{ wide }}>
@@ -47,9 +45,7 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, "") ||
 <style>
   header {
     display: flex;
-    align-items: center;
     justify-content: flex-end;
-    gap: var(--space-2);
     padding: var(--space-3) var(--gutter);
   }
 

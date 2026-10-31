@@ -1,7 +1,8 @@
 <script lang="ts">
   /**
-   * The query console: a Query button that floats in the bottom right corner
-   * of the page and opens the SQL shell in a modal over most of it.
+   * The query console: a round button with a terminal prompt (>_) that floats
+   * in the bottom right corner of the page and opens the SQL shell in a modal
+   * over most of it.
    *
    * - The shell, and DuckDB-WASM with it, load on the first open only; after
    *   that the shell stays alive while closed, so reopening keeps its history.
@@ -84,14 +85,19 @@
   });
 </script>
 
-<button type="button" class="launcher" onclick={open} aria-haspopup="dialog" title="Query the corpus with SQL ({shortcut})">
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-    <path d="m7 11 2-2-2-2" />
-    <path d="M11 13h4" />
-    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+<button
+  type="button"
+  class="launcher"
+  onclick={open}
+  aria-haspopup="dialog"
+  aria-label="Query the corpus with SQL"
+  aria-keyshortcuts="Meta+K Control+K"
+  title="Query the corpus with SQL ({shortcut})"
+>
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="m4 17 6-6-6-6" />
+    <path d="M12 19h8" />
   </svg>
-  <span>Query</span>
-  <kbd>{shortcut}</kbd>
 </button>
 
 <dialog bind:this={dialog} class="console" aria-labelledby="console-title" onclose={onClose} onclick={onDialogClick}>
@@ -126,7 +132,8 @@
     stroke-linejoin: round;
   }
 
-  /* The floating button, clear of the page edge and of phone safe areas. */
+  /* The floating button: a circle, clear of the page edge and of phone safe
+     areas. */
   .launcher {
     position: fixed;
     right: max(var(--space-4), env(safe-area-inset-right));
@@ -134,15 +141,14 @@
     z-index: 10;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    min-height: var(--target-min);
-    padding: 0 var(--space-4);
-    font-family: var(--console-font-label);
-    font-size: var(--font-size-sm);
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
     color: var(--console-text);
     background: var(--console-background);
     border: var(--border-width) solid var(--console-border);
-    border-radius: 999px;
+    border-radius: 50%;
     box-shadow: var(--console-shadow);
     cursor: pointer;
     transition: border-color var(--transition-fast);
@@ -151,19 +157,6 @@
   .launcher:hover,
   .launcher:focus-visible {
     border-color: var(--console-accent);
-  }
-
-  kbd {
-    font-family: var(--console-font);
-    font-size: 0.75em;
-    color: var(--console-text-muted);
-  }
-
-  /* No keyboard hint where there is likely no keyboard. */
-  @media (hover: none) {
-    kbd {
-      display: none;
-    }
   }
 
   /* The modal: most of the page, with the page still showing around it. */
