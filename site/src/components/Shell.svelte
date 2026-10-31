@@ -13,9 +13,13 @@
     tables: (Table & { rows: string })[];
     /** Datasets listed in the table picker as not queryable yet. */
     soon?: string[];
+    /** A statement run once the shell starts, as if typed at the prompt. */
+    sample?: string;
+    /** Shown in the empty prompt. */
+    placeholder?: string;
   }
 
-  let { tables, soon = [] }: Props = $props();
+  let { tables, soon = [], sample, placeholder = "" }: Props = $props();
 
   /** Rows printed per result; the rest are counted. */
   const MAX_ROWS = 40;
@@ -52,6 +56,7 @@
           },
         ];
         status = "ready";
+        if (sample) return execute(sample);
         field?.focus();
       })
       .catch((e: unknown) => {
@@ -86,9 +91,16 @@
   }
 
   async function submit(): Promise<void> {
-    if (status !== "ready" || !session) return;
-    const text = input.trim();
+    if (status !== "ready") return;
+    const text = input;
     input = "";
+    await execute(text);
+  }
+
+  /** Echoes a statement at the prompt, runs it and prints the result. */
+  async function execute(raw: string): Promise<void> {
+    if (status !== "ready" || !session) return;
+    const text = raw.trim();
     if (!text) return;
     if (history.at(-1) !== text) history.push(text);
     historyIndex = history.length;
@@ -217,6 +229,7 @@
         onkeydown={onKeydown}
         rows={Math.max(1, input.split("\n").length)}
         disabled={status === "loading"}
+        {placeholder}
         spellcheck="false"
         autocapitalize="off"
         autocomplete="off"
@@ -309,5 +322,10 @@
     outline: none;
     resize: none;
     caret-color: var(--color-text);
+  }
+
+  textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.6;
   }
 </style>

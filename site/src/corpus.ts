@@ -50,6 +50,15 @@ export const shellTables = [
   { name: "ads", dataset: "faa-ads", src: `/data/processed/faa-ads/v${snapshot}/ad-final-rules.parquet` },
 ];
 
+/** Run when the shell starts, so it opens on real data. */
+export const shellSample = `SELECT ad_number, effective_date, subject
+FROM ads
+ORDER BY effective_date DESC
+LIMIT 5;`;
+
+/** Shown in the empty prompt. */
+export const shellPlaceholder = "SELECT count(*) FROM ads;";
+
 export function formatCount(n: number, approximate = false): string {
   if (approximate) return `~${(n / 1e6).toFixed(2)}M`;
   return n.toLocaleString("en-US");
