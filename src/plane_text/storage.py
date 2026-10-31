@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -91,12 +92,20 @@ def upload(path: Path, data_dir: Path, content_type: str | None = None) -> str:
     return key
 
 
-def list_objects(prefix: str) -> dict[str, int]:
-    """Every key in the bucket under `prefix`, with its size in bytes."""
-    objects: dict[str, int] = {}
+@dataclass(frozen=True)
+class Stored:
+    """An object in the bucket: its size in bytes and its ETag (without quotes)."""
+
+    bytes: int
+    etag: str
+
+
+def list_objects(prefix: str) -> dict[str, Stored]:
+    """Every key in the bucket under `prefix`."""
+    objects: dict[str, Stored] = {}
     for page in client().get_paginator("list_objects_v2").paginate(Bucket=bucket(), Prefix=prefix):
         for item in page.get("Contents", []):
-            objects[item["Key"]] = item["Size"]
+            objects[item["Key"]] = Stored(item["Size"], item["ETag"].strip('"'))
     return objects
 
 
