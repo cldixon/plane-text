@@ -257,7 +257,7 @@
     gap: var(--space-2) var(--space-3);
     padding: var(--space-2) var(--space-3);
     border-bottom: var(--border);
-    font-family: var(--font-family-mono);
+    font-family: var(--font-family-label);
   }
 
   .toolbar label,
@@ -271,6 +271,7 @@
     min-height: 2rem;
     padding: 0 var(--space-2);
     font: inherit;
+    font-family: var(--font-family-mono);
     color: var(--color-text);
     background: var(--color-background);
     border: var(--border-strong);

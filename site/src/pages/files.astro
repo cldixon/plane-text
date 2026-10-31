@@ -48,8 +48,14 @@ import { processedFolders, snapshot } from "../corpus";
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    font-family: var(--font-family-mono);
+    font-family: var(--font-family-label);
     font-size: var(--font-size-sm);
+  }
+
+  h2,
+  .archive > span:first-child,
+  td:first-child {
+    font-family: var(--font-family-mono);
   }
 
   h2 {

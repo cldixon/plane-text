@@ -1,7 +1,8 @@
 /* The design system's entry point. Import this once, in the base layout. */
 @import "@fontsource/b612-mono/400.css";
-@import "@fontsource/public-sans/400.css";
-@import "@fontsource/public-sans/400-italic.css";
-@import "@fontsource/public-sans/700.css";
+@import "@fontsource/b612/400.css";
+@import "@fontsource/b612/700.css";
+@import "@fontsource-variable/source-serif-4/opsz.css";
+@import "@fontsource-variable/source-serif-4/opsz-italic.css";
 @import "./tokens.css";
 @import "./base.css";

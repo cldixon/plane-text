@@ -22,6 +22,12 @@ body {
   font-family: var(--font-family-body);
   font-size: var(--font-size-base);
   line-height: var(--line-height-body);
+  font-optical-sizing: auto;
+}
+
+/* Old-style figures sit with the serif's lowercase in running text. */
+p {
+  font-variant-numeric: oldstyle-nums;
 }
 
 h1,
